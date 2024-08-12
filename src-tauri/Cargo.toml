@@ -18,6 +18,18 @@ tauri-build = { version = "1.5.3", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.7.0", features = [] }
+datafusion = { version = "40.0.0", features = ["serde"] }
+anyhow = "1.0.86"
+uuid = { version = "1.10.0", features = ["v4", "fast-rng", "serde"] }
+tokio = { version = "1.39.1", features = ["sync"] }
+thiserror = "1.0.63"
+futures = "0.3.30"
+aws-sdk-ssooidc = "1.37.0"
+aws-config = "1.5.4"
+open = "5.3.0"
+aws-sdk-sso = "1.36.0"
+object_store = { version = "0.10.2", features = ["cloud", "aws", "gcp"] }
+url = "2.5.2"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

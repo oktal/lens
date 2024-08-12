@@ -1,0 +1,83 @@
+<script lang="ts">
+	import Icon from '@iconify/svelte';
+	import Button from './ui/button/button.svelte';
+	import DatasourceDialog from './dialog/DatasourceDialog.svelte';
+	import { invoke } from '@tauri-apps/api';
+	import { toast } from 'svelte-sonner';
+	import type { DatasourceConfig } from '$lib/lens/types';
+
+	type DatasourceItem = { kind: 's3' | 'gcs'; url: string; config: Array<string> };
+
+	let datasourceDialog: DatasourceDialog;
+	let datasources: DatasourceConfig[] = $state([]);
+
+	const storeIcons: Record<string, string> = {
+		s3: 'mdi:aws',
+		gcs: 'mdi:google'
+	};
+
+	async function createDatasource() {
+		const config = await datasourceDialog.show();
+		try {
+			await invoke('create_datasource', { config });
+			toast.success(`Datasource ${config.url} successfully created`);
+		} catch (e) {
+			toast.error(`Error creating datasource: ${e}`);
+		}
+
+		datasources = await invoke<DatasourceConfig[]>('list_datasources');
+		console.log(datasources);
+	}
+
+	function toDatasourceItem({ url, store }: DatasourceConfig): DatasourceItem | undefined {
+		if ('s3' in store) {
+			const s3Config = store.s3;
+			const config = s3Config.bucket ? [s3Config.bucket] : [];
+
+			return {
+				kind: 's3',
+				url,
+				config: [...config, s3Config.region]
+			};
+		}
+
+		if ('gcs' in store) {
+			const gcsConfig = store.gcs;
+
+			return {
+				kind: 'gcs',
+				url,
+				config: []
+			};
+		}
+
+		return undefined;
+	}
+</script>
+
+<div class="flex flex-col gap-1">
+	<div class="place-self-end px-2 py-2">
+		<Button variant="default" size="icon" on:click={createDatasource}>
+			<Icon icon="carbon:add" width={24} height={24} /></Button
+		>
+	</div>
+
+	{#each datasources as datasource}
+		{@const item = toDatasourceItem(datasource)}
+		{#if item}
+			<div class="rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+				<div class="flex gap-4">
+					<Icon icon={storeIcons[item.kind]} width={32} height={32} />
+					<div class="grid gap-1">
+						<p class="text-sm font-bold leading-none">{item.url}</p>
+						{#each item.config as configItem}
+							<p class="text-xs font-medium text-slate-500">{configItem}</p>
+						{/each}
+					</div>
+				</div>
+			</div>
+		{/if}
+	{/each}
+</div>
+
+<DatasourceDialog bind:this={datasourceDialog} />
