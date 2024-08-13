@@ -1,6 +1,38 @@
 //! Module that defines common types that are exchanged between the frontend and the backend
 
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
+
+/// A database (or catalog) registered in DataFusion' context
+#[derive(Debug, Serialize)]
+pub struct Database {
+    /// Name of the database
+    pub name: String,
+
+    /// List of [`Schema`] schemas for this database
+    pub schemas: Vec<Schema>,
+}
+
+/// A schema registered in DataFusion' context
+#[derive(Debug, Serialize)]
+pub struct Schema {
+    /// Name of the schema
+    pub name: String,
+
+    /// List [`Table`] tables for this schema
+    pub tables: Vec<Table>,
+}
+
+/// Represents a table registered in DataFusion' context
+#[derive(Debug, Serialize)]
+pub struct Table {
+    /// Name of the table
+    pub name: String,
+
+    /// Associated DataFusion [`Schema`] of this table
+    pub schema: Arc<datafusion::arrow::datatypes::Schema>,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
 pub struct StreamId(uuid::Uuid);

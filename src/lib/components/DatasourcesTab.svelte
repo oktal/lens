@@ -2,9 +2,9 @@
 	import Icon from '@iconify/svelte';
 	import Button from './ui/button/button.svelte';
 	import DatasourceDialog from './dialog/DatasourceDialog.svelte';
-	import { invoke } from '@tauri-apps/api';
 	import { toast } from 'svelte-sonner';
 	import type { DatasourceConfig } from '$lib/lens/types';
+	import { client } from '$lib/lens/api';
 
 	type DatasourceItem = { kind: 's3' | 'gcs'; url: string; config: Array<string> };
 
@@ -19,14 +19,14 @@
 	async function createDatasource() {
 		const config = await datasourceDialog.show();
 		try {
-			await invoke('create_datasource', { config });
+			await client.create.datasource(config);
+
 			toast.success(`Datasource ${config.url} successfully created`);
 		} catch (e) {
 			toast.error(`Error creating datasource: ${e}`);
 		}
 
-		datasources = await invoke<DatasourceConfig[]>('list_datasources');
-		console.log(datasources);
+		datasources = await client.list.datasources();
 	}
 
 	function toDatasourceItem({ url, store }: DatasourceConfig): DatasourceItem | undefined {
@@ -53,6 +53,10 @@
 
 		return undefined;
 	}
+
+	$effect(() => {
+		client.list.datasources().then((sources: DatasourceConfig[]) => (datasources = sources));
+	});
 </script>
 
 <div class="flex flex-col gap-1">

@@ -75,7 +75,7 @@
 		<Select.Trigger>
 			<Select.Value placeholder="Region" />
 		</Select.Trigger>
-		<Select.Content>
+		<Select.Content class="overflow-scroll">
 			{#each regionItems as { value, label }}
 				<Select.Item {value} class="flex gap-1">
 					<Icon icon={regionFlags[value]} width={24} height={24} />

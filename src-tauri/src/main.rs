@@ -20,6 +20,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             cmd::create::create_datasource,
             cmd::list::list_datasources,
+            cmd::list::list_databases,
+            cmd::sql::sql,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

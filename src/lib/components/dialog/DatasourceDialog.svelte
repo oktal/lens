@@ -39,7 +39,7 @@
 			label: string;
 			icon: string;
 			url: string;
-			options: Component<{ config: AmazonS3Config | GoogleCloudStorageConfig }>;
+			options: Component<{ config: any }>;
 			config: AmazonS3Config | GoogleCloudStorageConfig;
 		}
 	> = {
@@ -88,7 +88,7 @@
 	<Dialog.Content class="sm:max-w-[425px]">
 		<Dialog.Header>
 			<Dialog.Title>Create data source</Dialog.Title>
-			<Dialog.Description>Create a new data source</Dialog.Description>
+			<Dialog.Description>Instruct datalens where to find your data</Dialog.Description>
 		</Dialog.Header>
 		<div class="flex flex-col gap-2">
 			<Label>Type</Label>

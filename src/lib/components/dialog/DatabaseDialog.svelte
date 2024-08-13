@@ -43,8 +43,7 @@
 		</div>
 		<Dialog.Footer>
 			<Button on:click={cancel}>Cancel</Button>
-			<Button on:click={closeDialog}>Save</Button>
+			<Button on:click={closeDialog}>Create</Button>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
-
