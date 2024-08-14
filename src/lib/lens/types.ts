@@ -201,3 +201,10 @@ export type TimeZone = string | undefined;
 
 export type FileType = "csv" | "arrow" | "parquet" | "avro" | "json";
 export type TimeUnit = "Second" | "Millisecond" | "Microsecond" | "Nanosecond";
+
+export type StreamId = string;
+
+export type Row = {
+  columns: string[],
+  values: string[]
+}

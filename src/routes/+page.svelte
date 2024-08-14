@@ -3,11 +3,12 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Resizable from '$lib/components/ui/resizable';
 	import DatasourcesTab from '$lib/components/DatasourcesTab.svelte';
+	import QueryTab from '$lib/components/QueryTab.svelte';
 </script>
 
 <Resizable.PaneGroup direction="horizontal" class="h-full items-stretch rounded-lg border">
 	<Resizable.Pane defaultSize={20}>
-		<Tabs.Root value="account" class="ml-2 mt-2 h-full">
+		<Tabs.Root value="table" class="ml-2 mt-2 h-full">
 			<Tabs.List>
 				<Tabs.Trigger value="table">Tables</Tabs.Trigger>
 				<Tabs.Trigger value="datasource">Datasources</Tabs.Trigger>
@@ -18,8 +19,6 @@
 	</Resizable.Pane>
 	<Resizable.Handle />
 	<Resizable.Pane defaultSize={80}>
-		<div class="flex h-full items-center justify-center p-6">
-			<span class="font-semibold">Content</span>
-		</div>
+		<QueryTab />
 	</Resizable.Pane>
 </Resizable.PaneGroup>

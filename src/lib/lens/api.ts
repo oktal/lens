@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api";
-import type { Database, DatasourceConfig, DataType, TimeUnit, TimeZone } from "./types";
+import type { Database, DatasourceConfig, DataType, Row, StreamId, TimeUnit, TimeZone } from "./types";
 
 export type Client = {
   create: {
@@ -12,7 +12,9 @@ export type Client = {
   }
 
   sql: {
-    run: (query: string) => Promise<void>
+    run: (query: string) => Promise<void>,
+    stream: (query: string) => Promise<StreamId>,
+    next: (streamId: StreamId) => Promise<Row[]>,
   }
 }
 
@@ -169,6 +171,14 @@ export const client: Client = {
   sql: {
     run: (query: string): Promise<void> => {
       return invoke('sql', { query })
+    },
+
+    stream: (query: string): Promise<StreamId> => {
+      return invoke('sql_stream', { query })
+    },
+
+    next: (streamId: StreamId): Promise<Row[]> => {
+      return invoke('sql_next', { streamId })
     }
   }
 }

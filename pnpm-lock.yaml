@@ -93,6 +93,9 @@ importers:
       svelte-check:
         specifier: ^3.6.0
         version: 3.8.5(postcss-load-config@4.0.2(postcss@8.4.40))(postcss@8.4.40)(svelte@5.0.0-next.210)
+      svelte-headless-table:
+        specifier: ^0.18.2
+        version: 0.18.2(svelte@5.0.0-next.210)
       tailwindcss:
         specifier: ^3.4.4
         version: 3.4.7
@@ -1476,11 +1479,21 @@ packages:
       svelte:
         optional: true
 
+  svelte-headless-table@0.18.2:
+    resolution: {integrity: sha512-dnDTaXW5CNzRUjHVbc/Hb0Zv80zU4VcIUnAja6OuZriXvim1AqcWYQCHPRzBGwqj1m3YEHHNvspSzY0o5HzA0A==}
+    peerDependencies:
+      svelte: ^4.0.0
+
   svelte-hmr@0.16.0:
     resolution: {integrity: sha512-Gyc7cOS3VJzLlfj7wKS0ZnzDVdv3Pn2IuVeJPk9m2skfhcu5bq3wtIZyQGggr7/Iim5rH5cncyQft/kRLupcnA==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
       svelte: ^3.19.0 || ^4.0.0
+
+  svelte-keyed@2.0.0:
+    resolution: {integrity: sha512-7TeEn+QbJC2OJrHiuM0T8vMBkms3DNpTE+Ir+NtnVBnBMA78aL4f1ft9t0Hn/pBbD/TnIXi4YfjFRAgtN+DZ5g==}
+    peerDependencies:
+      svelte: ^4.0.0
 
   svelte-preprocess@5.1.4:
     resolution: {integrity: sha512-IvnbQ6D6Ao3Gg6ftiM5tdbR6aAETwjhHV+UKGf5bHGYR69RQvF1ho0JKPcbUON4vy4R7zom13jPjgdOWCQ5hDA==}
@@ -1519,10 +1532,20 @@ packages:
       typescript:
         optional: true
 
+  svelte-render@2.0.1:
+    resolution: {integrity: sha512-RpB0SurwXm4xhjvHHtjeqMmvd645FURb79GFOotScOSqnKK5vpqBgoBPGC0pp+E/eZgDSQ9rRAdn/+N4ys1mXQ==}
+    peerDependencies:
+      svelte: ^4.0.0
+
   svelte-sonner@0.3.27:
     resolution: {integrity: sha512-+PvbuePNTyTNCepCWqKcFeu+Lo27yYuwfSc7zJvrWjCRMJrWAmccPg3j7jO1W13QoN3TySXU5Trb956VBQiM5Q==}
     peerDependencies:
       svelte: ^3.0.0 || ^4.0.0 || ^5.0.0-next.1
+
+  svelte-subscribe@2.0.1:
+    resolution: {integrity: sha512-eKXIjLxB4C7eQWPqKEdxcGfNXm2g/qJ67zmEZK/GigCZMfrTR3m7DPY93R6MX+5uoqM1FRYxl8LZ1oy4URWi2A==}
+    peerDependencies:
+      svelte: ^4.0.0
 
   svelte@5.0.0-next.210:
     resolution: {integrity: sha512-6QZpzr31weKDyAKifOdXJHK9oEeBE2Z/z/h1IX4tmJRuWPE/2Wc7Lzpfxl+0irS19GZH6V5YZnZLNTRJKjGzfg==}
@@ -2931,7 +2954,18 @@ snapshots:
     optionalDependencies:
       svelte: 5.0.0-next.210
 
+  svelte-headless-table@0.18.2(svelte@5.0.0-next.210):
+    dependencies:
+      svelte: 5.0.0-next.210
+      svelte-keyed: 2.0.0(svelte@5.0.0-next.210)
+      svelte-render: 2.0.1(svelte@5.0.0-next.210)
+      svelte-subscribe: 2.0.1(svelte@5.0.0-next.210)
+
   svelte-hmr@0.16.0(svelte@5.0.0-next.210):
+    dependencies:
+      svelte: 5.0.0-next.210
+
+  svelte-keyed@2.0.0(svelte@5.0.0-next.210):
     dependencies:
       svelte: 5.0.0-next.210
 
@@ -2948,7 +2982,16 @@ snapshots:
       postcss-load-config: 4.0.2(postcss@8.4.40)
       typescript: 5.5.4
 
+  svelte-render@2.0.1(svelte@5.0.0-next.210):
+    dependencies:
+      svelte: 5.0.0-next.210
+      svelte-subscribe: 2.0.1(svelte@5.0.0-next.210)
+
   svelte-sonner@0.3.27(svelte@5.0.0-next.210):
+    dependencies:
+      svelte: 5.0.0-next.210
+
+  svelte-subscribe@2.0.1(svelte@5.0.0-next.210):
     dependencies:
       svelte: 5.0.0-next.210
 

@@ -22,6 +22,8 @@ fn main() {
             cmd::list::list_datasources,
             cmd::list::list_databases,
             cmd::sql::sql,
+            cmd::sql::sql_stream,
+            cmd::sql::sql_next,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
