@@ -138,5 +138,9 @@
 
 {#snippet rawText()}
 	{stream.columns}
-	<Textarea readonly value={slice.map((row: string[]) => `${row}`)} />
+	<Textarea
+		readonly
+		class="h-full"
+		value={slice.map((row: string[]) => row.join(',')).join('\n')}
+	/>
 {/snippet}

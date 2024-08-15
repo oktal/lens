@@ -24,13 +24,18 @@
 	let queryError: any | undefined = $state(undefined);
 
 	async function runQuery() {
+		const handleError = (error: any) => {
+			queryError = error;
+			queryState = 'stopped';
+		};
+
 		const fetch = async () => {
 			try {
 				while (queryState === 'running' && queryStream.hasNext) {
 					await queryStream.fetchNext();
 				}
 			} catch (e) {
-				queryError = e;
+				handleError(e);
 			}
 		};
 
@@ -43,7 +48,7 @@
 				queryError = undefined;
 				queryStream = await useQueryStream(queryString);
 			} catch (e) {
-				queryError = e;
+				handleError(e);
 			}
 
 			fetch();
