@@ -237,11 +237,21 @@
 		return opts;
 	}
 
+	function getLocationPath(): string {
+		if (dataSource?.kind === 'dir') {
+			// DataFusion requires that table path that represent a directory structure
+			// ends with with a '/' delimiter
+			if (!locationPath.endsWith('/')) return locationPath + '/';
+		}
+
+		return locationPath;
+	}
+
 	function closeDialog() {
 		open = false;
 		if (accept_) {
 			const options = createOptions(fileTypeOpts[fileType].config);
-			const location = `${dataSource?.url}${locationPath}`;
+			const location = `${dataSource?.url}${getLocationPath()}`;
 			accept_({ database, schema, name, fileType, partitions, options, location });
 		}
 	}
