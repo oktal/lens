@@ -15,7 +15,8 @@
 		decimal: 'carbon:character-decimal',
 		timestamp: 'carbon:time',
 		date: 'carbon:calendar',
-		time: 'carbon:time'
+		time: 'carbon:time',
+		dictionary: 'carbon:book'
 	};
 </script>
 

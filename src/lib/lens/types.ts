@@ -171,6 +171,13 @@ export type Utf8 = {
   logical: "string"
 }
 
+export type Dictionary = {
+  kind: "dictionary",
+  logical: "dictionary",
+  keyType: DataType,
+  valueType: DataType,
+}
+
 export type DataType =
   Null
   | Boolean
@@ -193,7 +200,8 @@ export type DataType =
   | Duration
   | Timestamp
   | LargeUtf8
-  | Utf8;
+  | Utf8
+  | Dictionary;
 
 export type LogicalDataType = Extract<DataType, { logical: string }>["logical"];
 

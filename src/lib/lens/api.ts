@@ -100,20 +100,30 @@ export const client: Client = {
                 logical: "string",
               };
           }
-        } else {
-          if ("Timestamp" in dt) {
-            const [unit, tz] = dt["Timestamp"];
-            const timeUnit = toTimeUnit(unit);
+        } else if ("Timestamp" in dt) {
+          const [unit, tz] = dt["Timestamp"];
+          const timeUnit = toTimeUnit(unit);
 
-            if (timeUnit === undefined) {
-              return undefined;
-            }
+          if (timeUnit === undefined) {
+            return undefined;
+          }
 
+          return {
+            kind: "timestamp",
+            logical: "timestamp",
+            unit: timeUnit,
+            tz: toTimezone(tz),
+          };
+        } else if ("Dictionary" in dt) {
+          const [keyType, valueType] = dt["Dictionary"]
+
+          const [keyDataType, valueDataType] = [toDataType(keyType), toDataType(valueType)];
+          if (typeof (keyDataType) !== 'undefined' && typeof (valueDataType) !== 'undefined') {
             return {
-              kind: "timestamp",
-              logical: "timestamp",
-              unit: timeUnit,
-              tz: toTimezone(tz),
+              kind: "dictionary",
+              logical: "dictionary",
+              keyType: keyDataType,
+              valueType: valueDataType,
             };
           }
         }
