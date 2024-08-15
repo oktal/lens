@@ -1,11 +1,12 @@
 <script lang="ts">
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Select from '$lib/components/ui/select';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import type { AmazonS3Config } from '$lib/lens/types';
 	import awsRegions from 'aws-regions';
-	import { Input } from '../ui/input';
 	import Icon from '@iconify/svelte';
-	import { Label } from '../ui/label';
 
 	let { config }: { config: AmazonS3Config } = $props();
 
@@ -16,8 +17,8 @@
 	const regions = awsRegions.list().filter((r) => r.public);
 	const regionItems = regions.map((region) => {
 		return {
-			value: region.code,
-			label: `${region.code} ${region.name}`
+			value: region,
+			label: `${region.code}`
 		};
 	});
 
@@ -71,17 +72,20 @@
 		</Tabs.Content>
 	</Tabs.Root>
 
-	<Select.Root items={regionItems} onSelectedChange={(v) => v && (config.region = v.value)}>
+	<Select.Root items={regionItems} onSelectedChange={(v) => v && (config.region = v.value.code)}>
 		<Select.Trigger>
 			<Select.Value placeholder="Region" />
 		</Select.Trigger>
-		<Select.Content class="overflow-scroll">
-			{#each regionItems as { value, label }}
-				<Select.Item {value} class="flex gap-1">
-					<Icon icon={regionFlags[value]} width={24} height={24} />
-					{label}
-				</Select.Item>
-			{/each}
+		<Select.Content>
+			<ScrollArea class="h-96">
+				{#each regionItems as { value, label }}
+					<Select.Item {value} class="flex gap-1">
+						<Icon icon={regionFlags[value.code]} width={24} height={24} />
+						<span>{value.code}</span>
+						<span class="ml-auto mr-2 text-xs font-medium">{value.name}</span>
+					</Select.Item>
+				{/each}
+			</ScrollArea>
 		</Select.Content>
 	</Select.Root>
 
