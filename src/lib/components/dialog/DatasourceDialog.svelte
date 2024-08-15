@@ -20,18 +20,8 @@
 
 	type DataSource = 's3' | 'gcs';
 
-	let amazonS3Config: AmazonS3Config = {
-		accessKeyId: '',
-		secretAccessKey: '',
-		bucket: '',
-		region: ''
-	};
-
-	let gcsConfig: GoogleCloudStorageConfig = {
-		serviceAccountPath: '',
-		serviceAccountKey: '',
-		applicationCredentialsPath: ''
-	};
+	type OptionsComponent = Component<{ getConfig: () => any }>;
+	let options = $state<OptionsComponent | undefined>(undefined);
 
 	let datasources: Record<
 		DataSource,
@@ -39,7 +29,7 @@
 			label: string;
 			icon: string;
 			url: string;
-			options: Component<{ config: any }>;
+			options: OptionsComponent;
 			config: AmazonS3Config | GoogleCloudStorageConfig;
 		}
 	> = {
@@ -47,14 +37,12 @@
 			label: 'Amazon S3',
 			icon: 'mdi:aws',
 			url: 's3://',
-			options: AmazonS3Options,
-			config: amazonS3Config
+			options: AmazonS3Options
 		},
 		gcs: {
 			label: 'Google Cloud Storage',
 			icon: 'mdi:google',
-			url: 'gcp://',
-			config: gcsConfig
+			url: 'gcp://'
 		}
 	};
 
@@ -68,7 +56,7 @@
 		open = false;
 		const datasource = datasources[selected];
 		let storeConfig: any = {};
-		storeConfig[selected] = datasource.config;
+		storeConfig[selected] = options?.getConfig();
 
 		const config: DatasourceConfig = {
 			url: datasource.url,
@@ -119,10 +107,7 @@
 
 			<Card.Root>
 				<div class="m-2">
-					<svelte:component
-						this={datasources[selected].options}
-						config={datasources[selected].config}
-					/>
+					<svelte:component this={datasources[selected].options} bind:this={options} />
 				</div>
 			</Card.Root>
 		</div>

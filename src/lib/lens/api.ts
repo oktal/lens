@@ -1,7 +1,22 @@
 import { invoke } from "@tauri-apps/api";
 import type { Database, DatasourceConfig, DataType, Row, StreamId, TimeUnit, TimeZone } from "./types";
 
+export type AwsSSOInfo = {
+  startUrl: string,
+  region: string,
+  accountId: string
+  role: string,
+};
+
+export type AwsCredentials = {
+  accessKeyId: string,
+  secretAccessKey: string
+}
+
 export type Client = {
+  aws: {
+    ssoLogin: ({ startUrl, region, accountId, role }: AwsSSOInfo) => Promise<AwsCredentials>
+  }
   create: {
     datasource: (config: DatasourceConfig) => Promise<void>
   },
@@ -19,6 +34,23 @@ export type Client = {
 }
 
 export const client: Client = {
+  aws: {
+    ssoLogin: async ({ startUrl, region, accountId, role }: AwsSSOInfo): Promise<AwsCredentials> => {
+      const [accessKeyId, secretAccessKey] = await invoke<[string, string]>('aws_sso_login', {
+        startUrl,
+        region,
+        accountId,
+        roleName: role
+      });
+
+      return {
+        accessKeyId,
+        secretAccessKey
+      };
+
+    },
+  },
+
   create: {
     datasource: (config: DatasourceConfig): Promise<void> => {
       return invoke('create_datasource', { config })

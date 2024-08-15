@@ -3,6 +3,7 @@
 
 use lens::Lens;
 
+mod aws;
 mod cmd;
 mod common;
 mod lens;
@@ -18,6 +19,7 @@ fn main() {
         })
         .manage(lens)
         .invoke_handler(tauri::generate_handler![
+            cmd::aws::aws_sso_login,
             cmd::create::create_datasource,
             cmd::list::list_datasources,
             cmd::list::list_databases,
