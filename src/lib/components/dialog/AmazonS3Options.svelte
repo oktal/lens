@@ -5,7 +5,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { Button } from '$lib/components/ui/button';
-	import type { AmazonS3Config } from '$lib/lens/types';
+	import type { AmazonS3Config, AwsSSOProfile } from '$lib/lens/types';
 	import awsRegions from 'aws-regions';
 	import Icon from '@iconify/svelte';
 
@@ -21,6 +21,8 @@
 	let ssoStartUrl = $state('');
 	let ssoAccountId = $state('');
 	let ssoRole = $state('');
+
+	let ssoProfiles = $state<AwsSSOProfile[]>([]);
 
 	export function getConfig(): AmazonS3Config {
 		return {
@@ -66,15 +68,27 @@
 		'cn-northwest-1': 'openmoji:flag-china'
 	};
 
+	function selectSSOProfile({
+		startUrl,
+		accountId,
+		roleName,
+		region: ssoRegion
+	}: Omit<AwsSSOProfile, 'name'>) {
+		ssoStartUrl = startUrl;
+		ssoAccountId = accountId;
+		ssoRole = roleName;
+		region = ssoRegion;
+	}
+
 	async function ssoLogin() {
 		try {
-			const [startUrl, accountId, role] = [ssoStartUrl, ssoAccountId, ssoRole];
+			const [startUrl, accountId, roleName] = [ssoStartUrl, ssoAccountId, ssoRole];
 
 			const creds = await client.aws.ssoLogin({
 				startUrl,
 				region,
 				accountId,
-				role
+				roleName
 			});
 
 			accessKeyId = creds.accessKeyId;
@@ -83,6 +97,12 @@
 			toast.error(`Failed to login: ${e}`);
 		}
 	}
+
+	$effect(() => {
+		client.aws.listSSOProfiles().then((profiles: AwsSSOProfile[]) => {
+			ssoProfiles = profiles;
+		});
+	});
 </script>
 
 <div class="flex w-full flex-col gap-2">
@@ -100,6 +120,26 @@
 		</Tabs.Content>
 		<Tabs.Content value="sso">
 			<div class="flex flex-col gap-1.5">
+				{#if ssoProfiles.length > 0}
+					<Select.Root
+						items={ssoProfiles.map((p) => {
+							return { value: p, label: p.name };
+						})}
+						onSelectedChange={(v) => v && selectSSOProfile(v.value)}
+					>
+						<Select.Trigger>
+							<Select.Value placeholder="Profile" />
+						</Select.Trigger>
+						<Select.Content>
+							{#each ssoProfiles as ssoProfile}
+								<Select.Item value={ssoProfile} class="flex gap-1">
+									<span>{ssoProfile.name}</span>
+								</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				{/if}
+
 				<Input required bind:value={ssoStartUrl} placeholder="Start URL" />
 				<Input required bind:value={ssoAccountId} placeholder="Account ID" />
 				<Input required bind:value={ssoRole} placeholder="Role" />
@@ -113,7 +153,11 @@
 		</Tabs.Content>
 	</Tabs.Root>
 
-	<Select.Root items={regionItems} onSelectedChange={(v) => v && (region = v.value.code)}>
+	<Select.Root
+		items={regionItems}
+		selected={regionItems.find((item) => item.label == region)}
+		onSelectedChange={(v) => v && (region = v.value.code)}
+	>
 		<Select.Trigger>
 			<Select.Value placeholder="Region" />
 		</Select.Trigger>

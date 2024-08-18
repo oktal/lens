@@ -20,6 +20,7 @@ fn main() {
         .manage(lens)
         .invoke_handler(tauri::generate_handler![
             cmd::aws::aws_sso_login,
+            cmd::aws::list_aws_sso_profiles,
             cmd::create::create_datasource,
             cmd::list::list_datasources,
             cmd::list::list_databases,

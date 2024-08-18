@@ -216,3 +216,11 @@ export type Row = {
   columns: string[],
   values: string[]
 }
+
+export type AwsSSOProfile = {
+  name: string,
+  region: string,
+  startUrl: string,
+  accountId: string,
+  roleName: string,
+}

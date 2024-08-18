@@ -1,12 +1,5 @@
 import { invoke } from "@tauri-apps/api";
-import type { Database, DatasourceConfig, DataType, Row, StreamId, TimeUnit, TimeZone } from "./types";
-
-export type AwsSSOInfo = {
-  startUrl: string,
-  region: string,
-  accountId: string
-  role: string,
-};
+import type { AwsSSOProfile, Database, DatasourceConfig, DataType, Row, StreamId, TimeUnit, TimeZone } from "./types";
 
 export type AwsCredentials = {
   accessKeyId: string,
@@ -15,10 +8,11 @@ export type AwsCredentials = {
 
 export type Client = {
   aws: {
-    ssoLogin: ({ startUrl, region, accountId, role }: AwsSSOInfo) => Promise<AwsCredentials>
+    listSSOProfiles: () => Promise<AwsSSOProfile[]>,
+    ssoLogin: ({ startUrl, region, accountId, roleName }: Omit<AwsSSOProfile, 'name'>) => Promise<AwsCredentials>,
   }
   create: {
-    datasource: (config: DatasourceConfig) => Promise<void>
+    datasource: (config: DatasourceConfig) => Promise<void>,
   },
 
   list: {
@@ -35,12 +29,16 @@ export type Client = {
 
 export const client: Client = {
   aws: {
-    ssoLogin: async ({ startUrl, region, accountId, role }: AwsSSOInfo): Promise<AwsCredentials> => {
+    listSSOProfiles: (): Promise<AwsSSOProfile[]> => {
+      return invoke<AwsSSOProfile[]>('list_aws_sso_profiles')
+    },
+
+    ssoLogin: async ({ startUrl, region, accountId, roleName }: Omit<AwsSSOProfile, 'name'>): Promise<AwsCredentials> => {
       const [accessKeyId, secretAccessKey] = await invoke<[string, string]>('aws_sso_login', {
         startUrl,
         region,
         accountId,
-        roleName: role
+        roleName
       });
 
       return {

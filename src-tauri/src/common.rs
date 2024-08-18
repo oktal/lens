@@ -85,3 +85,23 @@ pub struct DatasourceConfig {
     pub url: String,
     pub store: ObjectStoreConfig,
 }
+
+/// A configuration for an AWS IAM SSO profile retrieved from the configuration file
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AwsSsoProfile {
+    /// Name of the profile
+    pub name: String,
+
+    /// AWS Region
+    pub region: String,
+
+    /// SSO Start URL
+    pub start_url: String,
+
+    /// SSO Account Id
+    pub account_id: String,
+
+    /// SSO role name
+    pub role_name: String,
+}
