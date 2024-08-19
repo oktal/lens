@@ -20,7 +20,7 @@
 
 	type DataSource = 's3' | 'gcs';
 
-	type OptionsComponent = Component<{ getConfig: () => any }>;
+	type OptionsComponent = Component<{}, { getConfig: () => any }>;
 	let options = $state<OptionsComponent | undefined>(undefined);
 
 	let datasources: Record<
@@ -30,7 +30,6 @@
 			icon: string;
 			url: string;
 			options: OptionsComponent;
-			config: AmazonS3Config | GoogleCloudStorageConfig;
 		}
 	> = {
 		s3: {

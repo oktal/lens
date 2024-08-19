@@ -14,6 +14,7 @@
 
 	let accessKeyId = $state('');
 	let secretAccessKey = $state('');
+	let sessionToken: string | undefined = undefined;
 
 	let region = $state('');
 	let bucket = $state<string | undefined>(undefined);
@@ -28,6 +29,7 @@
 		return {
 			accessKeyId,
 			secretAccessKey,
+			sessionToken,
 			region,
 			bucket
 		};
@@ -93,6 +95,7 @@
 
 			accessKeyId = creds.accessKeyId;
 			secretAccessKey = creds.secretAccessKey;
+			sessionToken = creds.sessionToken;
 		} catch (e) {
 			toast.error(`Failed to login: ${e}`);
 		}

@@ -148,6 +148,7 @@ impl Lens {
             ObjectStoreConfig::AmazonS3 {
                 access_key_id,
                 secret_access_key,
+                session_token,
                 bucket,
                 region,
             } => {
@@ -155,6 +156,10 @@ impl Lens {
                     .with_access_key_id(access_key_id)
                     .with_secret_access_key(secret_access_key)
                     .with_region(region);
+
+                if let Some(session_token) = session_token {
+                    builder = builder.with_token(session_token);
+                }
 
                 if let Some(bucket) = bucket {
                     builder = builder.with_bucket_name(bucket);

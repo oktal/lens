@@ -19,7 +19,7 @@ pub async fn aws_sso_login(
     region: String,
     account_id: String,
     role_name: String,
-) -> LensResult<(String, String)> {
+) -> LensResult<(String, String, String)> {
     let credentials = aws::sso_login(start_url, region, account_id, role_name).await?;
     Ok(credentials)
 }

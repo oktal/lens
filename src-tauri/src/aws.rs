@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Context};
 use aws_config::{BehaviorVersion, Region, SdkConfig};
-use aws_sdk_sso::Client as SsoClient;
+use aws_sdk_sso::{Client as SsoClient, types::RoleCredentials};
 use aws_sdk_ssooidc::{
     operation::{
         create_token::{CreateTokenError, CreateTokenOutput},
@@ -92,7 +92,7 @@ async fn get_credentials(
     access_token: String,
     account_id: String,
     role_name: String,
-) -> anyhow::Result<(String, String)> {
+) -> anyhow::Result<RoleCredentials> {
     let client = SsoClient::new(&config);
     let account_roles = client
         .list_account_roles()
@@ -125,6 +125,23 @@ async fn get_credentials(
         .role_credentials()
         .expect("missing role credentials");
 
+    Ok(credentials.clone())
+}
+
+pub async fn sso_login(
+    start_url: String,
+    region: String,
+    account_id: String,
+    role_name: String,
+) -> anyhow::Result<(String, String, String)> {
+    let config = aws_config::defaults(BehaviorVersion::v2024_03_28())
+        .region(Region::new(region))
+        .load()
+        .await;
+
+    let access_token = get_access_token(&config, start_url).await?;
+    let credentials = get_credentials(&config, access_token, account_id, role_name).await?;
+
     let access_key_id = credentials
         .access_key_id()
         .ok_or(anyhow!("missing access key id"))?
@@ -134,20 +151,7 @@ async fn get_credentials(
         .ok_or(anyhow!("missing secret key"))?
         .to_string();
 
-    Ok((access_key_id, secret_key))
-}
+    let session_token = credentials.session_token().ok_or(anyhow!("missing session token"))?.to_string();
 
-pub async fn sso_login(
-    start_url: String,
-    region: String,
-    account_id: String,
-    role_name: String,
-) -> anyhow::Result<(String, String)> {
-    let config = aws_config::defaults(BehaviorVersion::v2024_03_28())
-        .region(Region::new(region))
-        .load()
-        .await;
-
-    let access_token = get_access_token(&config, start_url).await?;
-    get_credentials(&config, access_token, account_id, role_name).await
+    Ok((access_key_id, secret_key, session_token))
 }

@@ -3,7 +3,8 @@ import type { AwsSSOProfile, Database, DatasourceConfig, DataType, Row, StreamId
 
 export type AwsCredentials = {
   accessKeyId: string,
-  secretAccessKey: string
+  secretAccessKey: string,
+  sessionToken: string,
 }
 
 export type Client = {
@@ -34,7 +35,7 @@ export const client: Client = {
     },
 
     ssoLogin: async ({ startUrl, region, accountId, roleName }: Omit<AwsSSOProfile, 'name'>): Promise<AwsCredentials> => {
-      const [accessKeyId, secretAccessKey] = await invoke<[string, string]>('aws_sso_login', {
+      const [accessKeyId, secretAccessKey, sessionToken] = await invoke<[string, string, string]>('aws_sso_login', {
         startUrl,
         region,
         accountId,
@@ -43,9 +44,9 @@ export const client: Client = {
 
       return {
         accessKeyId,
-        secretAccessKey
+        secretAccessKey,
+        sessionToken,
       };
-
     },
   },
 

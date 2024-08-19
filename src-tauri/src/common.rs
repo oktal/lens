@@ -66,6 +66,7 @@ pub enum ObjectStoreConfig {
     AmazonS3 {
         access_key_id: String,
         secret_access_key: String,
+        session_token: Option<String>,
         bucket: Option<String>,
         region: String,
     },

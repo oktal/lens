@@ -1,6 +1,7 @@
 export type AmazonS3Config = {
   accessKeyId: string;
   secretAccessKey: string;
+  sessionToken?: string;
   bucket?: string;
   region: string;
 };
