@@ -11,8 +11,10 @@
 	import SchemaDialog from './dialog/SchemaDialog.svelte';
 	import TableDialog from './dialog/TableDialog.svelte';
 	import { mount } from 'svelte';
+	import { Spinner } from './ui/spinner';
 
 	let databases: Database[] = $state([]);
+	let refreshPromise = $state<Promise<void>>(Promise.resolve());
 
 	$effect(() => {
 		client.list.databases().then((dbs: Database[]) => (databases = dbs));
@@ -81,12 +83,16 @@
 
 		query += ` LOCATION '${table.location}'`;
 
-		try {
-			await client.sql.run(query);
-			toast.success(`Table ${tableRef} has been created`);
-		} catch (e) {
-			toast.error(`Error creating table ${tableRef}: ${e}`);
-		}
+		refreshPromise = new Promise<void>(async (accept, _reject) => {
+			try {
+				await client.sql.run(query);
+				toast.success(`Table ${tableRef} has been created`);
+			} catch (e) {
+				toast.error(`Error creating table ${tableRef}: ${e}`);
+			}
+			accept();
+		});
+
 
 		databases = await client.list.databases();
 	}
@@ -117,6 +123,13 @@
 </script>
 
 <div class="flex flex-col gap-1">
+	{#await refreshPromise}
+		<div class="flex flex-row gap-1 items-center">
+			<span>Refreshing...</span>
+			<Spinner />
+		</div>
+	{/await}
+
 	<div class="place-self-end px-2 py-2">
 		{@render addMenu(addMenuItems)}
 	</div>
