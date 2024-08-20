@@ -21,28 +21,19 @@
 	type DataSource = 's3' | 'gcs';
 
 	type OptionsComponent = Component<{}, { getConfig: () => any }>;
+	type DatasourceItem = {
+		label: string;
+		icon: string;
+		get url(): string;
+		set url(value: string);
+		options?: OptionsComponent
+	};
+
 	let options = $state<OptionsComponent | undefined>(undefined);
 
-	let datasources: Record<
-		DataSource,
-		{
-			label: string;
-			icon: string;
-			url: string;
-			options: OptionsComponent;
-		}
-	> = {
-		s3: {
-			label: 'Amazon S3',
-			icon: 'mdi:aws',
-			url: 's3://',
-			options: AmazonS3Options
-		},
-		gcs: {
-			label: 'Google Cloud Storage',
-			icon: 'mdi:google',
-			url: 'gcp://'
-		}
+	let datasources: Record<DataSource, DatasourceItem> = {
+		s3: useDatasource({ label: 'Amazon S3', icon: 'mdi:aws', defaultUrl: 's3://', options: AmazonS3Options}),
+		gcs: useDatasource({label: 'Google Cloud Storage', icon: 'mdi:google', defaultUrl: 'gcp://', options: undefined}),
 	};
 
 	let open = $state(false);
@@ -50,6 +41,18 @@
 
 	let accept_: (config: DatasourceConfig) => void;
 	let reject_: () => void;
+
+	function useDatasource({label, icon, defaultUrl, options}: {label: string, icon: string, defaultUrl: string, options?: OptionsComponent}): DatasourceItem {
+		let url = $state(defaultUrl);
+
+		return {
+			label,
+			icon,
+			get url() { return url },
+			set url(value: string) { url = value },
+			options
+		}
+	}
 
 	function closeDialog() {
 		open = false;
