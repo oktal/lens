@@ -9,29 +9,18 @@
 	import QueryResultsTable from './QueryResultsTable.svelte';
 
 	let queryString = $state('');
-	let queryStream = $state<QueryStream>({
-		query: '',
-		streamId: '',
-		columns: [],
-		get rows() {
-			return [];
-		},
-		hasNext: false,
-		fetchNext: () => Promise.resolve()
-	});
-
-	let queryState = $state<'running' | 'paused' | 'stopped'>('stopped');
+	let queryStream = $state<QueryStream | undefined>(undefined);
 	let queryError: any | undefined = $state(undefined);
 
 	async function runQuery() {
 		const handleError = (error: any) => {
 			queryError = error;
-			queryState = 'stopped';
+			queryStream = undefined;
 		};
 
 		const fetch = async () => {
 			try {
-				while (queryState === 'running' && queryStream.hasNext) {
+				while (queryStream && queryStream.state === 'running' && queryStream.hasNext) {
 					await queryStream.fetchNext();
 				}
 			} catch (e) {
@@ -39,12 +28,11 @@
 			}
 		};
 
-		if (queryState === 'paused') {
-			queryState = 'running';
+		if (queryStream?.state === 'paused') {
+			queryStream.resume();
 			fetch();
 		} else {
 			try {
-				queryState = 'running';
 				queryError = undefined;
 				queryStream = await useQueryStream(queryString);
 			} catch (e) {
@@ -70,9 +58,11 @@
 
 	<Separator />
 
-	<div class="m-4">
-		<QueryResultsTable stream={queryStream} />
-	</div>
+	{#if queryStream}
+		<div class="m-4">
+			<QueryResultsTable stream={queryStream} />
+		</div>
+	{/if}
 </div>
 
 {#snippet topBar()}
@@ -80,23 +70,23 @@
 		<div class="ml-2">
 			{@render topBarItem({
 				icon: 'carbon:play',
-				tooltip: queryState === 'stopped' ? 'Execute query' : 'Resume query',
-				disabled: queryState == 'running' || queryString == '',
+				tooltip: queryStream === undefined ? 'Execute query' : 'Resume query',
+				disabled: queryStream?.state === 'running' || queryString == '',
 				action: runQuery
 			})}
 
 			{@render topBarItem({
 				icon: 'carbon:pause',
 				tooltip: 'Pause running query',
-				disabled: queryState !== 'running',
-				action: () => (queryState = 'paused')
+				disabled: queryStream?.state !== 'running',
+				action: () => (queryStream!.pause())
 			})}
 
 			{@render topBarItem({
 				icon: 'carbon:stop',
 				tooltip: 'Stop running query',
-				disabled: queryState === 'stopped',
-				action: () => (queryState = 'stopped')
+				disabled: queryStream === undefined || queryStream.state === 'stopped',
+				action: () => (queryStream!.stop())
 			})}
 		</div>
 	</div>

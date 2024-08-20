@@ -13,12 +13,8 @@
 	import { mount } from 'svelte';
 	import { Spinner } from './ui/spinner';
 
-	let databases: Database[] = $state([]);
-	let refreshPromise = $state<Promise<void>>(Promise.resolve());
-
-	$effect(() => {
-		client.list.databases().then((dbs: Database[]) => (databases = dbs));
-	});
+	let databases = $state<Database[]>([]);
+	let loadPromise = $state<Promise<void>>(Promise.resolve());
 
 	async function createDatabase() {
 		const dialog = mount(DatabaseDialog, {
@@ -83,18 +79,17 @@
 
 		query += ` LOCATION '${table.location}'`;
 
-		refreshPromise = new Promise<void>(async (accept, _reject) => {
+		loadPromise = new Promise<void>(async (accept, _reject) => {
 			try {
 				await client.sql.run(query);
 				toast.success(`Table ${tableRef} has been created`);
 			} catch (e) {
 				toast.error(`Error creating table ${tableRef}: ${e}`);
 			}
+
+			databases = await client.list.databases();
 			accept();
 		});
-
-
-		databases = await client.list.databases();
 	}
 
 	type MenuItem = {
@@ -120,10 +115,14 @@
 			onClick: createTable
 		}
 	];
+
+	$effect(() => {
+		client.list.databases().then((dbs: Database[]) => (databases = dbs));
+	})
 </script>
 
 <div class="flex flex-col gap-1">
-	{#await refreshPromise}
+	{#await loadPromise}
 		<div class="flex flex-row gap-1 items-center">
 			<span>Refreshing...</span>
 			<Spinner />

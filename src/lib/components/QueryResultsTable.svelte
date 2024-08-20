@@ -8,6 +8,7 @@
 	import { Button } from './ui/button';
 	import Icon from '@iconify/svelte';
 	import { Label } from './ui/label';
+	import Progress from './ui/progress/progress.svelte';
 
 	let { stream } = $props<{ stream: QueryStream }>();
 
@@ -42,6 +43,9 @@
 </Tabs.Root>
 
 {#snippet dataTable()}
+	{#if stream.state === 'running'}
+		<Progress value={undefined} />
+	{/if}
 	<Table.Root>
 		<Table.Header>
 			<Table.Row>
