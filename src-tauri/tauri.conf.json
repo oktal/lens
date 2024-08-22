@@ -11,10 +11,10 @@
   },
   "tauri": {
     "allowlist": {
-        "all": false,
-        "dialog": {
-            "open": true
-        }
+      "all": false,
+      "dialog": {
+        "open": true
+      }
     },
     "bundle": {
       "active": true,
@@ -51,6 +51,10 @@
     },
     "security": {
       "csp": null
+    },
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
     },
     "updater": {
       "active": false
