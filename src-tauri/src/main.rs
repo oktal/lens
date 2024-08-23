@@ -8,6 +8,7 @@ mod cmd;
 mod common;
 mod lens;
 mod query;
+mod table_provider;
 
 fn main() {
     let (lens, query_executor) = Lens::new();

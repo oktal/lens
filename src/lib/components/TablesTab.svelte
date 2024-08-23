@@ -71,10 +71,23 @@
 		const table = await dialog.show();
 		const tableRef = `${table.database}.${table.schema}.${table.name}`;
 
-		let query = `CREATE EXTERNAL TABLE ${tableRef} STORED AS ${table.fileType}`;
+		let query = `CREATE EXTERNAL TABLE ${tableRef}`;
+		const partitionColumnDefs = table.partitions
+			.filter((p) => p.type !== undefined)
+			.map((p) => {
+				return `${p.name} ${p.type}`;
+			})
+			.join(', ');
+
+		if (partitionColumnDefs.length > 0) {
+			query += `(${partitionColumnDefs})`;
+		}
+
+		query += ` STORED AS ${table.fileType}`;
 
 		if (table.partitions.length > 0) {
-			query += ` PARTITIONED BY (${table.partitions.join(',')})`;
+			const partitionDefs = table.partitions.map((p) => p.name).join(',');
+			query += ` PARTITIONED BY (${partitionDefs})`;
 		}
 
 		query += ` LOCATION '${table.location}'`;
@@ -118,12 +131,12 @@
 
 	$effect(() => {
 		client.list.databases().then((dbs: Database[]) => (databases = dbs));
-	})
+	});
 </script>
 
 <div class="flex flex-col gap-1">
 	{#await loadPromise}
-		<div class="flex flex-row gap-1 items-center">
+		<div class="flex flex-row items-center gap-1">
 			<span>Refreshing...</span>
 			<Spinner />
 		</div>

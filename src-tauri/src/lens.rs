@@ -45,10 +45,22 @@ impl serde::Serialize for LensError {
 
 impl Lens {
     pub fn new() -> (Self, QueryStreamer) {
+        // Setup session
         let config = SessionConfig::new()
             .with_information_schema(false)
             .with_create_default_catalog_and_schema(false);
+
         let ctx = SessionContext::new_with_config(config);
+
+        // Replace default table factories by our own factory
+        {
+            let state_ref = ctx.state_ref();
+            let mut state = state_ref.write();
+            for factory in state.table_factories_mut().values_mut() {
+                *factory = crate::table_provider::factory();
+            }
+        }
+
         let (query_exec, query_tx) = QueryStreamer::new(ctx.clone());
         (
             Self {

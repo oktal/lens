@@ -6,7 +6,7 @@
 
 		fileType: FileType;
 		options: Record<string, string>;
-		partitions: Array<string>;
+		partitions: Array<{ name: string; type?: string }>;
 		location: string;
 	};
 </script>
@@ -34,6 +34,7 @@
 	import CsvOptions from './CsvOptions.svelte';
 	import ParquetOptions from './ParquetOptions.svelte';
 	import JsonOptions from './JsonOptions.svelte';
+	import Grid from '../ui/grid/grid.svelte';
 
 	interface Props {
 		databases: Database[];
@@ -101,7 +102,9 @@
 	let schema = $state('');
 	let name = $state('');
 	let fileType: FileType = $state('csv');
-	let partitions: string[] = $state([]);
+	let partitions = $state<
+		{ get name(): string; set name(val: string): string; get type(): string | undefined; set type(val: string) }[]
+	>([]);
 	let dataSource: DatasourceItem | undefined = $state();
 	let locationPath = $state('');
 
@@ -180,11 +183,36 @@
 		}
 	};
 
+	const dataTypes = ['Bool', 'Double', 'Int', 'Date', 'String'];
+
 	let accept_: ((info: TableInfo) => void) | undefined = undefined;
 	let reject_: ((reason?: any) => void) | undefined = undefined;
 
 	function deletePartition(index: number) {
 		partitions = [...partitions.slice(0, index), ...partitions.slice(index + 1)];
+	}
+
+	function createPartition() {
+		let name = $state('');
+		let type = $state<string | undefined>(undefined);
+
+		const partition = {
+			get name(): string {
+				return name;
+			},
+			set name(val: string) {
+				name = val;
+			},
+
+			get type(): string | undefined {
+				return type;
+			},
+			set type(val: string) {
+				type = val;
+			}
+		};
+
+		partitions.push(partition);
 	}
 
 	async function openFileBrowser(directory: boolean) {
@@ -270,40 +298,42 @@
 				>Create a named entity for your data that can be queried later on through SQL</Dialog.Description
 			>
 		</Dialog.Header>
-		<div class="grid grid-cols-3 items-center gap-4 py-4">
-			<Label class="shrink">Database</Label>
-			<Select.Root items={databaseItems} onSelectedChange={(v) => v && (database = v.value)}>
-				<Select.Trigger class="col-span-2">
-					<Select.Value />
-				</Select.Trigger>
-				<Select.Content>
-					{#each databaseItems as { value, label }}
-						<Select.Item {value} class="flex gap-1">
-							{label}
-						</Select.Item>
-					{/each}
-				</Select.Content>
-			</Select.Root>
+		<div class="flex flex-col gap-4 py-4">
+			<Grid rows={3} cols={['1fr', '2fr']} class="items-center gap-2">
+				<Label>Database</Label>
+				<Select.Root items={databaseItems} onSelectedChange={(v) => v && (database = v.value)}>
+					<Select.Trigger>
+						<Select.Value />
+					</Select.Trigger>
+					<Select.Content>
+						{#each databaseItems as { value, label }}
+							<Select.Item {value} class="flex gap-1">
+								{label}
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 
-			<Label class="shrink">Schema</Label>
-			<Select.Root items={schemaItems} onSelectedChange={(v) => v && (schema = v.value)}>
-				<Select.Trigger class="col-span-2">
-					<Select.Value />
-				</Select.Trigger>
-				<Select.Content>
-					{#each schemaItems as { value, label }}
-						<Select.Item {value} class="flex gap-1">
-							{label}
-						</Select.Item>
-					{/each}
-				</Select.Content>
-			</Select.Root>
+				<Label>Schema</Label>
+				<Select.Root items={schemaItems} onSelectedChange={(v) => v && (schema = v.value)}>
+					<Select.Trigger>
+						<Select.Value />
+					</Select.Trigger>
+					<Select.Content>
+						{#each schemaItems as { value, label }}
+							<Select.Item {value} class="flex gap-1">
+								{label}
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 
-			<Label for="name">Name</Label>
-			<Input id="name" class="col-span-2" bind:value={name} />
+				<Label for="name">Name</Label>
+				<Input id="name" bind:value={name} />
+			</Grid>
 
-			<Label class="col-span-3">Type</Label>
-			<ToggleGroup.Root variant="outline" type="single" class="col-span-3" bind:value={fileType}>
+			<Label>Type</Label>
+			<ToggleGroup.Root variant="outline" type="single" bind:value={fileType}>
 				{#each Object.entries(fileTypeIcons) as [fileType, icon]}
 					<ToggleGroup.Item
 						value={fileType}
@@ -328,43 +358,59 @@
 				</Card.Root>
 			{/if}
 
-			<div class="col-span-3 flex flex-row items-center justify-items-center">
+			<div class="flex flex-row items-center justify-items-center">
 				<Label>Partitioned by</Label>
-				<Button
-					variant="default"
-					size="icon"
-					class="ml-auto h-8 w-8"
-					on:click={() => partitions.push('')}
-				>
+				<Button variant="default" size="icon" class="ml-auto h-8 w-8" on:click={createPartition}>
 					<Icon icon="carbon:add" width={24} height={24} class="w-full" /></Button
 				>
 			</div>
 
-			{#each partitions as _, i}
-				<Input class="col-span-2 flex grow" bind:value={partitions[i]} />
-				<Button variant="outline" size="icon" class="ml-auto" on:click={() => deletePartition(i)}>
-					<Icon icon="mdi:delete" />
-				</Button>
-			{/each}
+			<Grid cols={['3fr', '2fr', '1fr']} class="justify-evenly gap-1">
+				{#each partitions as partition, i}
+					<Input bind:value={partition.name} />
 
-			<Label class="col-span-3">Location</Label>
-			<Select.Root items={datasourceItems} onSelectedChange={(s) => (dataSource = s?.value)}>
-				<Select.Trigger>
-					<Select.Value />
-				</Select.Trigger>
-				<Select.Content>
-					{#each datasourceItems as { value, label }}
-						{#if value}
-							<Select.Item {value} class="flex items-center gap-1">
-								<Icon icon={storeIcons[value.kind]} width={24} height={24} />
-								{label}
-							</Select.Item>
-						{/if}
-					{/each}
-				</Select.Content>
-			</Select.Root>
-			<div class="col-span-2 flex gap-1">
-				<Input bind:value={locationPath} />
+					<Select.Root
+						items={dataTypes.map((dt) => {
+							return { label: dt, value: dt };
+						})}
+						onSelectedChange={(v) => v && (partitions[i].type = v.value)}
+					>
+						<Select.Trigger>
+							<Select.Value placeholder="Type" />
+						</Select.Trigger>
+						<Select.Content>
+							{#each dataTypes as dataType}
+								<Select.Item value={dataType}>{dataType}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+
+					<Button variant="outline" size="icon" class="ml-auto" on:click={() => deletePartition(i)}>
+						<Icon icon="mdi:delete" />
+					</Button>
+				{/each}
+			</Grid>
+
+			<Label>Location</Label>
+			<div class="flex flex-row gap-1">
+				<div class="w-32">
+					<Select.Root items={datasourceItems} onSelectedChange={(s) => (dataSource = s?.value)}>
+						<Select.Trigger>
+							<Select.Value />
+						</Select.Trigger>
+						<Select.Content>
+							{#each datasourceItems as { value, label }}
+								{#if value}
+									<Select.Item {value} class="flex items-center gap-1">
+										<Icon icon={storeIcons[value.kind]} width={24} height={24} />
+										{label}
+									</Select.Item>
+								{/if}
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				</div>
+				<Input bind:value={locationPath} class="flex-1" />
 
 				{#if browsable}
 					<Button
