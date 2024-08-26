@@ -1,25 +1,89 @@
 <script lang="ts">
 	import { type QueryStream } from './QueryStream.svelte';
+	import QueryResultHeader from './QueryResultHeader.svelte';
 	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
+	import Button from '$lib/components/ui/button/button.svelte';
 	import { Textarea } from './ui/textarea';
-	import { Button } from './ui/button';
 	import Icon from '@iconify/svelte';
 	import { Label } from './ui/label';
 	import Progress from './ui/progress/progress.svelte';
+	import type {
+		ColumnDef,
+		PaginationState,
+		Row,
+		SortingState,
+		TableOptions,
+		Updater
+	} from '@tanstack/svelte-table';
+	import {
+		FlexRender,
+		createColumnHelper,
+		createTable,
+		getCoreRowModel,
+		getPaginationRowModel,
+		getSortedRowModel,
+		renderComponent
+	} from '@tanstack/svelte-table';
 
 	let { stream } = $props<{ stream: QueryStream }>();
 
-	let currentPage = $state(0);
-	let rowsPerPage = $state(10);
+	const columnHelper = createColumnHelper<string[]>();
 
-	let start = $derived(currentPage * rowsPerPage);
-	let end = $derived(Math.min(start + rowsPerPage, stream.rows.length));
+	const columns: ColumnDef<string[], string>[] = stream.columns.map(
+		(column: string, idx: number) => {
+			return columnHelper.accessor((row: string[]) => row[idx], {
+				id: column,
+				header: ({ header }) => renderComponent(QueryResultHeader, { label: column, header })
+			});
+		}
+	);
 
-	let slice = $derived(stream.rows.slice(start, end));
-	let lastPage = $derived(Math.max(Math.ceil(stream.rows.length / rowsPerPage) - 1, 0));
+	let sorting = $state<SortingState>([]);
+	let pagination = $state<PaginationState>({
+		pageIndex: 0,
+		pageSize: 10
+	});
+
+	function setSorting(updater: Updater<SortingState>) {
+		if (updater instanceof Function) {
+			sorting = updater(sorting);
+		} else sorting = updater;
+	}
+
+	function setPagination(updater: Updater<PaginationState>) {
+		if (updater instanceof Function) {
+			pagination = updater(pagination);
+		} else pagination = updater;
+	}
+
+	const options: TableOptions<string[]> = {
+		get data() {
+			return stream.rows;
+		},
+		columns,
+		state: {
+			get sorting() {
+				return sorting;
+			},
+			get pagination() {
+				return pagination;
+			}
+		},
+		onSortingChange: setSorting,
+		onPaginationChange: setPagination,
+		getCoreRowModel: getCoreRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		getPaginationRowModel: getPaginationRowModel()
+	};
+
+	const table = createTable(options);
+
+	let start = $derived(pagination.pageIndex * pagination.pageSize);
+	let end = $derived(Math.min(start + pagination.pageSize, stream.rows.length));
+	let lastPage = $derived(Math.max(Math.ceil(stream.rows.length / pagination.pageSize) - 1, 0));
 
 	const rowsPerPageItems = [10, 25, 50, 100].map((x) => {
 		return {
@@ -46,35 +110,47 @@
 	{#if stream.state === 'running'}
 		<Progress value={undefined} />
 	{/if}
+
 	<Table.Root>
 		<Table.Header>
-			<Table.Row>
-				{#each stream.columns as column}
-					<Table.Head>{column}</Table.Head>
-				{/each}
-			</Table.Row>
+			{#each table.getHeaderGroups() as headerGroup}
+				<Table.Row>
+					{#each headerGroup.headers as header}
+						<Table.Head>
+							{#if !header.isPlaceholder}
+								<FlexRender
+									content={header.column.columnDef.header}
+									context={header.getContext()}
+								/>
+							{/if}
+						</Table.Head>
+					{/each}
+				</Table.Row>
+			{/each}
 		</Table.Header>
 		<Table.Body>
-			{#each slice as values}
+			{#each table.getRowModel().rows as row}
 				<Table.Row>
-					{#each values as cell}
-						<Table.Cell class="p-1 font-medium">{cell}</Table.Cell>
+					{#each row.getVisibleCells() as cell}
+						<Table.Cell class="p-1 px-8 font-medium">
+							<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
+						</Table.Cell>
 					{/each}
 				</Table.Row>
 			{/each}
 		</Table.Body>
 	</Table.Root>
 
-	{@render pagination()}
+	{@render paginationControl()}
 {/snippet}
 
-{#snippet pagination()}
+{#snippet paginationControl()}
 	<div class="flex items-center justify-end space-x-4 py-4">
 		<Label>Rows per page</Label>
 		<Select.Root
 			items={rowsPerPageItems}
 			selected={rowsPerPageItems[0]}
-			onSelectedChange={(v) => v && (rowsPerPage = v.value)}
+			onSelectedChange={(v) => v && table.setPageSize(v.value)}
 		>
 			<Select.Trigger class="w-[80px]">
 				<Select.Value />
@@ -88,31 +164,33 @@
 			</Select.Content>
 		</Select.Root>
 
-		<Label>{start + 1}-{end} of {stream.rows.length} ({currentPage}/{lastPage} page)</Label>
+		<Label
+			>Page {pagination.pageIndex + 1} of {lastPage} ({start}-{end} of {stream.rows.length} rows)</Label
+		>
 
 		{@render paginationItem({
 			icon: 'material-symbols:first-page',
 			tooltip: 'First page',
-			disabled: currentPage == 0,
-			action: () => (currentPage = 0)
+			disabled: !table.getCanPreviousPage(),
+			action: () => table.firstPage()
 		})}
 		{@render paginationItem({
 			icon: 'material-symbols:chevron-left',
 			tooltip: 'Previous page',
-			disabled: currentPage == 0,
-			action: () => (currentPage -= 1)
+			disabled: !table.getCanPreviousPage(),
+			action: () => table.previousPage()
 		})}
 		{@render paginationItem({
 			icon: 'material-symbols:chevron-right',
 			tooltip: 'Next page',
-			disabled: currentPage == lastPage,
-			action: () => (currentPage += 1)
+			disabled: !table.getCanNextPage(),
+			action: () => table.nextPage()
 		})}
 		{@render paginationItem({
 			icon: 'material-symbols:last-page',
 			tooltip: 'Last page',
-			disabled: currentPage == lastPage,
-			action: () => (currentPage = lastPage)
+			disabled: !table.getCanNextPage(),
+			action: () => table.lastPage()
 		})}
 	</div>
 {/snippet}
@@ -142,9 +220,5 @@
 
 {#snippet rawText()}
 	{stream.columns}
-	<Textarea
-		readonly
-		class="h-full"
-		value={slice.map((row: string[]) => row.join(',')).join('\n')}
-	/>
+	<Textarea readonly class="h-full" />
 {/snippet}

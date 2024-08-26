@@ -85,7 +85,7 @@
 		<div class="ml-2">
 			{@render topBarItem({
 				icon: 'carbon:play',
-				tooltip: queryStream === undefined ? 'Execute query' : 'Resume query',
+				tooltip: queryStream?.state === 'paused' ? 'Resume query' : 'Execute query',
 				disabled: queryStream?.state === 'running' || queryString == '',
 				action: runQuery
 			})}
@@ -100,7 +100,10 @@
 			{@render topBarItem({
 				icon: 'carbon:stop',
 				tooltip: 'Stop running query',
-				disabled: queryStream === undefined || queryStream.state === 'stopped',
+				disabled:
+					queryStream === undefined ||
+					queryStream.state === 'stopped' ||
+					queryStream.state === 'finished',
 				action: () => queryStream!.stop()
 			})}
 		</div>
