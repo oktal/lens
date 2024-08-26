@@ -13,7 +13,6 @@
 	import type {
 		ColumnDef,
 		PaginationState,
-		Row,
 		SortingState,
 		TableOptions,
 		Updater
@@ -85,6 +84,25 @@
 	let end = $derived(Math.min(start + pagination.pageSize, stream.rows.length));
 	let lastPage = $derived(Math.max(Math.ceil(stream.rows.length / pagination.pageSize) - 1, 0));
 
+	function getRowsTextValues(): string[] {
+		const formatValue = (val: string): string => {
+			if (val.includes(' ') || val.includes(',')) return `"${val}"`;
+
+			return val;
+		};
+
+		const tableColumns = table.getAllColumns();
+		const rows = table.getRowModel().rows;
+		const values = rows.map((r) =>
+			tableColumns
+				.map((c) => r.getValue<string>(c.id))
+				.map((v) => formatValue(v))
+				.join(',')
+		);
+
+		return values;
+	}
+
 	const rowsPerPageItems = [10, 25, 50, 100].map((x) => {
 		return {
 			label: `${x}`,
@@ -100,9 +118,11 @@
 	</Tabs.List>
 	<Tabs.Content value="table">
 		{@render dataTable()}
+		{@render paginationControl()}
 	</Tabs.Content>
 	<Tabs.Content value="text">
 		{@render rawText()}
+		{@render paginationControl()}
 	</Tabs.Content>
 </Tabs.Root>
 
@@ -140,8 +160,6 @@
 			{/each}
 		</Table.Body>
 	</Table.Root>
-
-	{@render paginationControl()}
 {/snippet}
 
 {#snippet paginationControl()}
@@ -220,5 +238,6 @@
 
 {#snippet rawText()}
 	{stream.columns}
-	<Textarea readonly class="h-full" />
+
+	<Textarea readonly class="h-full" value={getRowsTextValues().join('\n')} />
 {/snippet}
