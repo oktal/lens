@@ -225,3 +225,15 @@ export type AwsSSOProfile = {
   accountId: string,
   roleName: string,
 }
+
+export type ExportFileFormat = Exclude<FileType, 'avro' | 'arrow'>;
+
+export type ExportOptions = {
+  format: ExportFileFormat;
+  writeOptions: {
+    overwrite: boolean;
+    singleFile: boolean;
+    partitionBy: string[];
+  };
+  path: string;
+};

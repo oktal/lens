@@ -12,6 +12,10 @@
 	import Icon from '@iconify/svelte';
 	import { type QueryStream, useQueryStream } from './QueryStream.svelte';
 	import QueryResultsTable from './QueryResultsTable.svelte';
+	import { mount } from 'svelte';
+	import ExportDialog from './dialog/ExportDialog.svelte';
+	import { toast } from 'svelte-sonner';
+	import { client } from '$lib/lens/api';
 
 	interface Props {
 		onSplit: (directory: SplitDirection) => void;
@@ -56,6 +60,28 @@
 
 			fetch();
 		}
+	}
+
+	async function exportResults() {
+		if (queryStream === undefined) return;
+
+		const dialog = mount(ExportDialog, {
+			target: document.body
+		});
+
+		const exportOptions = await dialog.show();
+
+		try {
+			const count = await client.stream.export(queryStream.streamId, exportOptions);
+			toast.success(`Exported ${count} rows to ${exportOptions.path}`);
+		} catch (e) {
+			toast.error(`Failed to export data: ${e}`);
+		}
+	}
+
+	function clear() {
+		queryString = '';
+		queryStream = undefined;
 	}
 </script>
 
@@ -105,6 +131,23 @@
 					queryStream.state === 'stopped' ||
 					queryStream.state === 'finished',
 				action: () => queryStream!.stop()
+			})}
+		</div>
+
+		<Separator orientation="vertical" />
+		<div class="ml-2">
+			{@render topBarItem({
+				icon: 'carbon:export',
+				tooltip: 'Export',
+				disabled: queryStream === undefined,
+				action: exportResults
+			})}
+
+			{@render topBarItem({
+				icon: 'carbon:erase',
+				tooltip: 'Clear',
+				disabled: queryStream === undefined,
+				action: clear
 			})}
 		</div>
 

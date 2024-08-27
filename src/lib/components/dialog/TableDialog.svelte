@@ -103,7 +103,12 @@
 	let name = $state('');
 	let fileType: FileType = $state('csv');
 	let partitions = $state<
-		{ get name(): string; set name(val: string): string; get type(): string | undefined; set type(val: string) }[]
+		{
+			get name(): string;
+			set name(val: string);
+			get type(): string | undefined;
+			set type(val: string);
+		}[]
 	>([]);
 	let dataSource: DatasourceItem | undefined = $state();
 	let locationPath = $state('');

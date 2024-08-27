@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api";
-import type { AwsSSOProfile, Database, DatasourceConfig, DataType, Row, StreamId, TimeUnit, TimeZone } from "./types";
+import type { AwsSSOProfile, Database, DatasourceConfig, DataType, ExportOptions, Row, StreamId, TimeUnit, TimeZone } from "./types";
 
 export type AwsCredentials = {
   accessKeyId: string,
@@ -25,6 +25,10 @@ export type Client = {
     run: (query: string) => Promise<void>,
     stream: (query: string) => Promise<StreamId>,
     next: (streamId: StreamId) => Promise<Row[]>,
+  },
+
+  stream: {
+    export: (streamId: StreamId, options: ExportOptions) => Promise<number>,
   }
 }
 
@@ -220,6 +224,12 @@ export const client: Client = {
 
     next: (streamId: StreamId): Promise<Row[]> => {
       return invoke('sql_next', { streamId })
+    }
+  },
+
+  stream: {
+    export: (streamId: StreamId, options: ExportOptions): Promise<number> => {
+      return invoke('stream_export', { id: streamId, options })
     }
   }
 }

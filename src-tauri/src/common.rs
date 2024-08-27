@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use datafusion::dataframe::DataFrameWriteOptions;
 use serde::{Deserialize, Serialize};
 
 /// A database (or catalog) registered in DataFusion' context
@@ -34,8 +35,8 @@ pub struct Table {
     pub schema: Arc<datafusion::arrow::datatypes::Schema>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
-pub struct StreamId(uuid::Uuid);
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Hash)]
+pub struct StreamId(pub(crate) uuid::Uuid);
 
 impl std::fmt::Display for StreamId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -105,4 +106,45 @@ pub struct AwsSsoProfile {
 
     /// SSO role name
     pub role_name: String,
+}
+
+/// Write options to export data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WriteOptions {
+    pub overwrite: bool,
+    pub single_file: bool,
+    pub partition_by: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ExportFormat {
+    Csv,
+    Parquet,
+    Json,
+}
+
+/// Options to export data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportOptions {
+    pub format: ExportFormat,
+    pub write_options: WriteOptions,
+    pub path: String,
+}
+
+impl Into<DataFrameWriteOptions> for WriteOptions {
+    fn into(self) -> DataFrameWriteOptions {
+        let Self {
+            overwrite,
+            single_file,
+            partition_by,
+        } = self;
+
+        DataFrameWriteOptions::new()
+            .with_overwrite(overwrite)
+            .with_single_file_output(single_file)
+            .with_partition_by(partition_by)
+    }
 }

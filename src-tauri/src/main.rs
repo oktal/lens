@@ -28,6 +28,7 @@ fn main() {
             cmd::sql::sql,
             cmd::sql::sql_stream,
             cmd::sql::sql_next,
+            cmd::stream::stream_export,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
