@@ -46,6 +46,19 @@
 		pageSize: 10
 	});
 
+	let table = $state(createResultsTable());
+
+	let start = $derived(pagination.pageIndex * pagination.pageSize);
+	let end = $derived(Math.min(start + pagination.pageSize, stream.rows.length));
+	let lastPage = $derived(Math.max(Math.ceil(stream.rows.length / pagination.pageSize) - 1, 0));
+
+	const rowsPerPageItems = [10, 25, 50, 100].map((x) => {
+		return {
+			label: `${x}`,
+			value: x
+		};
+	});
+
 	function setSorting(updater: Updater<SortingState>) {
 		if (updater instanceof Function) {
 			sorting = updater(sorting);
@@ -58,31 +71,29 @@
 		} else pagination = updater;
 	}
 
-	const options: TableOptions<string[]> = {
-		get data() {
-			return stream.rows;
-		},
-		columns,
-		state: {
-			get sorting() {
-				return sorting;
+	function createResultsTable() {
+		const options: TableOptions<string[]> = {
+			get data() {
+				return stream.rows;
 			},
-			get pagination() {
-				return pagination;
-			}
-		},
-		onSortingChange: setSorting,
-		onPaginationChange: setPagination,
-		getCoreRowModel: getCoreRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		getPaginationRowModel: getPaginationRowModel()
-	};
+			columns,
+			state: {
+				get sorting() {
+					return sorting;
+				},
+				get pagination() {
+					return pagination;
+				}
+			},
+			onSortingChange: setSorting,
+			onPaginationChange: setPagination,
+			getCoreRowModel: getCoreRowModel(),
+			getSortedRowModel: getSortedRowModel(),
+			getPaginationRowModel: getPaginationRowModel()
+		};
 
-	const table = createTable(options);
-
-	let start = $derived(pagination.pageIndex * pagination.pageSize);
-	let end = $derived(Math.min(start + pagination.pageSize, stream.rows.length));
-	let lastPage = $derived(Math.max(Math.ceil(stream.rows.length / pagination.pageSize) - 1, 0));
+		return createTable(options);
+	}
 
 	function getRowsTextValues(): string[] {
 		const formatValue = (val: string): string => {
@@ -103,11 +114,10 @@
 		return values;
 	}
 
-	const rowsPerPageItems = [10, 25, 50, 100].map((x) => {
-		return {
-			label: `${x}`,
-			value: x
-		};
+	$effect(() => {
+		if (stream.rows.length > 0) {
+			table = createResultsTable();
+		}
 	});
 </script>
 
