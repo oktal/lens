@@ -4,6 +4,7 @@
 	import Icon from '@iconify/svelte';
 
 	import type { Database, LogicalDataType } from '$lib/lens/types';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	let { databases }: { databases: Database[] } = $props();
 
@@ -18,20 +19,49 @@
 		time: 'carbon:time',
 		dictionary: 'carbon:book'
 	};
+
+	let expandMap = new SvelteMap<
+		string,
+		{
+			get expanded(): boolean;
+			set expanded(val: boolean);
+		}
+	>();
+
+	function toggleExpanded({ id }: { id: string }) {
+		if (!expandMap.has(id)) {
+			let expanded = $state(true);
+			expandMap.set(id, {
+				get expanded(): boolean {
+					return expanded;
+				},
+				set expanded(val: boolean) {
+					expanded = val;
+				}
+			});
+		} else {
+			let state = expandMap.get(id)!;
+			state.expanded = !state.expanded;
+		}
+	}
 </script>
 
 <Collapsible.Root>
 	{#each databases as { name, schemas }}
-		{@render trigger({ icon: 'carbon:db2-database', label: name })}
+		{@render trigger({ id: `database-${name}`, icon: 'carbon:db2-database', label: name })}
 
 		<Collapsible.Content>
 			{#each schemas as { name, tables }}
 				<Collapsible.Root class="w-full pl-5">
-					{@render trigger({ icon: 'material-symbols-light:schema-outline', label: name })}
+					{@render trigger({
+						id: `schema-${name}`,
+						icon: 'material-symbols-light:schema-outline',
+						label: name
+					})}
 					<Collapsible.Content>
 						{#each tables as { name, schema: { fields } }}
 							<Collapsible.Root class="w-full pl-5">
-								{@render trigger({ icon: 'carbon:data-table', label: name })}
+								{@render trigger({ id: `table-${name}`, icon: 'carbon:data-table', label: name })}
 
 								<Collapsible.Content>
 									<div class="pl-5">
@@ -55,12 +85,23 @@
 	{/each}
 </Collapsible.Root>
 
-{#snippet trigger({ icon, label }: { icon: string; label: string })}
+{#snippet trigger({ id, icon, label }: { id: string; icon: string; label: string })}
 	<Collapsible.Trigger asChild let:builder>
-		<Button builders={[builder]} variant="ghost" class="flex w-full justify-start gap-1">
-			<Icon icon="mdi:caret" class="rotate-90" width={24} height={24} />
+		<Button
+			builders={[builder]}
+			variant="ghost"
+			class="flex w-full justify-start gap-1"
+			on:click={() => toggleExpanded({ id })}
+		>
+			{@const state = expandMap.get(id)?.expanded ? 'expanded' : 'collapsed'}
+			{@render carret({ state })}
 			<Icon {icon} width={20} height={20} />
 			{label}
 		</Button>
 	</Collapsible.Trigger>
+{/snippet}
+
+{#snippet carret({ state }: { state: 'expanded' | 'collapsed' })}
+	{@const rotation = state === 'collapsed' ? 'rotate-90' : 'rotate-180'}
+	<Icon icon="mdi:caret" class="duration-100 ease-in-out {rotation}" width={24} height={24} />
 {/snippet}
