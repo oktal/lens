@@ -25,5 +25,5 @@
 		{/if}
 	</Button>
 {:else}
-	<span> NO </span>
+	<span class="px-4">{label ?? header.column.id}</span>
 {/if}

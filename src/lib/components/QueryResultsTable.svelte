@@ -31,14 +31,19 @@
 
 	const columnHelper = createColumnHelper<string[]>();
 
-	const columns: ColumnDef<string[], string>[] = stream.columns.map(
-		(column: string, idx: number) => {
+	const columns: ColumnDef<string[], string>[] = [
+		columnHelper.display({
+			id: 'rowIndex',
+			header: ({ header }) => renderComponent(QueryResultHeader, { label: '#', header }),
+			cell: (props) => props.row.index
+		}),
+		...stream.columns.map((column: string, idx: number) => {
 			return columnHelper.accessor((row: string[]) => row[idx], {
 				id: column,
 				header: ({ header }) => renderComponent(QueryResultHeader, { label: column, header })
 			});
-		}
-	);
+		})
+	];
 
 	let sorting = $state<SortingState>([]);
 	let pagination = $state<PaginationState>({
@@ -106,6 +111,7 @@
 		const rows = table.getRowModel().rows;
 		const values = rows.map((r) =>
 			tableColumns
+				.filter((c) => c.id !== 'rowIndex')
 				.map((c) => r.getValue<string>(c.id))
 				.map((v) => formatValue(v))
 				.join(',')
