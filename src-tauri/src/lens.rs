@@ -11,7 +11,7 @@ use tokio::sync::mpsc;
 use url::Url;
 
 use crate::{
-    common::{DatasourceConfig, ExportOptions, ObjectStoreConfig, Row, StreamId},
+    common::{DatasourceConfig, ExportOptions, ObjectStoreConfig, Row, StreamId, StreamInfo},
     query::stream::{QueryStreamRequest, QueryStreamer},
 };
 
@@ -103,6 +103,13 @@ impl Lens {
         self.stream_tx.send(req).await?;
         let count = rx.await?;
         count
+    }
+
+    pub async fn stream_list(&self) -> LensResult<Vec<StreamInfo>> {
+        let (req, rx) = QueryStreamRequest::list();
+        self.stream_tx.send(req).await?;
+        let infos = rx.await?;
+        infos
     }
 
     pub fn context(&self) -> &SessionContext {

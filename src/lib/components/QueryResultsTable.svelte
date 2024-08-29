@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type QueryStream } from './QueryStream.svelte';
+	import { type QueryStream } from '$lib/stores/QueryStream.svelte';
 	import QueryResultHeader from './QueryResultHeader.svelte';
 	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';

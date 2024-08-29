@@ -10,12 +10,13 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
 	import Icon from '@iconify/svelte';
-	import { type QueryStream, useQueryStream } from './QueryStream.svelte';
+	import { type QueryStream } from '$lib/stores/QueryStream.svelte';
 	import QueryResultsTable from './QueryResultsTable.svelte';
 	import { mount } from 'svelte';
 	import ExportDialog from './dialog/ExportDialog.svelte';
 	import { toast } from 'svelte-sonner';
 	import { client } from '$lib/lens/api';
+	import { queriesStore } from '$lib/stores/queries.svelte';
 
 	interface Props {
 		onSplit: (directory: SplitDirection) => void;
@@ -53,7 +54,7 @@
 		} else {
 			try {
 				queryError = undefined;
-				queryStream = await useQueryStream(queryString);
+				queryStream = await queriesStore.run(queryString);
 			} catch (e) {
 				handleError(e);
 			}
@@ -148,6 +149,13 @@
 				tooltip: 'Clear',
 				disabled: queryStream === undefined,
 				action: clear
+			})}
+
+			{@render topBarItem({
+				icon: 'carbon:save',
+				tooltip: 'Save results to history',
+				disabled: queryStream === undefined,
+				action: () => queryStream && queriesStore.save(queryStream)
 			})}
 		</div>
 

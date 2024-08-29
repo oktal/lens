@@ -134,6 +134,20 @@ pub struct ExportOptions {
     pub path: String,
 }
 
+/// Information about a [`StreamId`] stream that is currently executing or has been executed
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StreamInfo {
+    pub id: StreamId,
+    /// Original SQL query
+    pub query: String,
+
+    /// Total number of rows that have been retried
+    /// If the stream is still executing, the number of rows will represent the total number of
+    /// rows that have been retrieved so far
+    pub rows: usize,
+}
+
 impl Into<DataFrameWriteOptions> for WriteOptions {
     fn into(self) -> DataFrameWriteOptions {
         let Self {

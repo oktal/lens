@@ -63,12 +63,18 @@ pub enum QueryStreamRequest {
         resp_tx: oneshot::Sender<LensResult<Option<Vec<common::Row>>>>,
     },
 
+    /// Export the given [`StreamId`] to the location specified by [`ExportOptions`]
     Export {
         id: StreamId,
 
         options: ExportOptions,
 
         resp_tx: oneshot::Sender<LensResult<usize>>,
+    },
+
+    /// List all the active streams
+    List {
+        resp_tx: oneshot::Sender<LensResult<Vec<common::StreamInfo>>>,
     },
 }
 
@@ -104,19 +110,31 @@ impl QueryStreamRequest {
             resp_rx,
         )
     }
+
+    pub fn list() -> (Self, oneshot::Receiver<LensResult<Vec<common::StreamInfo>>>) {
+        let (resp_tx, resp_rx) = oneshot::channel();
+        (Self::List { resp_tx }, resp_rx)
+    }
 }
 
 struct StreamEntry {
     id: StreamId,
+    query: String,
     stream: SendableRecordBatchStream,
 
     table: Arc<MemTable>,
 }
 
 impl StreamEntry {
-    fn new(schema: SchemaRef, id: StreamId, stream: SendableRecordBatchStream) -> Self {
+    fn new(
+        schema: SchemaRef,
+        id: StreamId,
+        query: String,
+        stream: SendableRecordBatchStream,
+    ) -> Self {
         Self {
             id,
+            query,
             stream,
             table: Arc::new(MemTable::new(schema)),
         }
@@ -187,6 +205,10 @@ impl QueryStreamer {
             } => {
                 let _ = resp_tx.send(self.stream_export(id, options).await.map_err(Into::into));
             }
+
+            QueryStreamRequest::List { resp_tx } => {
+                let _ = resp_tx.send(self.stream_list().map_err(Into::into));
+            }
         }
     }
 
@@ -198,7 +220,7 @@ impl QueryStreamer {
         let stream = df.execute_stream().await?;
         let stream_id = StreamId::new();
 
-        let entry = StreamEntry::new(schema, stream_id, stream);
+        let entry = StreamEntry::new(schema, stream_id, query, stream);
 
         self.streams.insert(stream_id, entry);
         Ok(stream_id)
@@ -209,40 +231,40 @@ impl QueryStreamer {
             return Err(StreamError::UnknownStream(id));
         };
 
-        if let Some(item) = entry.stream.next().await {
-            let batch = item?;
+        let Some(batch) = entry.stream.next().await else {
+            return Ok(None);
+        };
 
-            entry.table.insert(batch.clone());
+        let batch = batch?;
 
-            let schema = batch.schema();
-            let columns = schema
-                .fields()
-                .iter()
-                .map(|f| f.name())
-                .cloned()
-                .collect::<Vec<_>>();
+        entry.table.insert(batch.clone());
 
-            let options = FormatOptions::default().with_display_error(true);
-            let formatters = batch
-                .columns()
-                .iter()
-                .map(|c| ArrayFormatter::try_new(c.as_ref(), &options))
-                .collect::<Result<Vec<_>, _>>()?;
+        let schema = batch.schema();
+        let columns = schema
+            .fields()
+            .iter()
+            .map(|f| f.name())
+            .cloned()
+            .collect::<Vec<_>>();
 
-            let rows = (0..batch.num_rows())
-                .map(|row| common::Row {
-                    columns: columns.clone(),
-                    values: formatters
-                        .iter()
-                        .map(|f| f.value(row).to_string())
-                        .collect(),
-                })
-                .collect();
+        let options = FormatOptions::default().with_display_error(true);
+        let formatters = batch
+            .columns()
+            .iter()
+            .map(|c| ArrayFormatter::try_new(c.as_ref(), &options))
+            .collect::<Result<Vec<_>, _>>()?;
 
-            Ok(Some(rows))
-        } else {
-            Ok(None)
-        }
+        let rows = (0..batch.num_rows())
+            .map(|row| common::Row {
+                columns: columns.clone(),
+                values: formatters
+                    .iter()
+                    .map(|f| f.value(row).to_string())
+                    .collect(),
+            })
+            .collect();
+
+        Ok(Some(rows))
     }
 
     async fn stream_export(&mut self, id: StreamId, options: ExportOptions) -> StreamResult<usize> {
@@ -283,8 +305,6 @@ impl QueryStreamer {
             }
         };
 
-        println!("{batches:#?}");
-
         let count = batches.first().and_then(|batch| {
             batch.column_by_name("count").and_then(|col| {
                 col.as_primitive_opt::<UInt64Type>()
@@ -293,5 +313,17 @@ impl QueryStreamer {
         });
 
         Ok(count.unwrap_or(0) as usize)
+    }
+
+    fn stream_list(&self) -> StreamResult<Vec<common::StreamInfo>> {
+        Ok(self
+            .streams
+            .iter()
+            .map(|(id, entry)| common::StreamInfo {
+                id: *id,
+                query: entry.query.clone(),
+                rows: entry.table.num_rows(),
+            })
+            .collect())
     }
 }

@@ -237,3 +237,9 @@ export type ExportOptions = {
   };
   path: string;
 };
+
+export type StreamInfo = {
+  id: StreamId;
+  query: string;
+  rows: number;
+}

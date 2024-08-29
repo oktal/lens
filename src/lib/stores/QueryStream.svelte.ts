@@ -9,7 +9,7 @@ export interface QueryStream {
   columns: string[];
 
   get rows(): string[][];
-  get state(): State; 
+  get state(): State;
 
   hasNext: boolean;
   fetchNext(): Promise<void>;
@@ -48,7 +48,8 @@ export async function useQueryStream(query: string): Promise<QueryStream> {
 
     const pause = () => {
       if (state === 'running') {
-        state = 'paused'; };
+        state = 'paused';
+      };
     };
     const resume = () => {
       if (state === 'paused')
@@ -83,9 +84,9 @@ export async function useQueryStream(query: string): Promise<QueryStream> {
       get state() { return undefined },
       hasNext: false,
       fetchNext: (): Promise<void> => Promise.resolve(),
-      pause: () => {},
-      resume: () => {},
-      stop: () => {},
+      pause: () => { },
+      resume: () => { },
+      stop: () => { },
     }
   }
 }

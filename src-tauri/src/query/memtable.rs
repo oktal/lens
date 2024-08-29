@@ -59,6 +59,11 @@ impl MemTable {
         let mut batches = self.shared.batches.write().expect("lock poisoned");
         batches.push(batch);
     }
+
+    pub fn num_rows(&self) -> usize {
+        let batches = self.shared.batches.read().expect("lock poisoned");
+        batches.iter().map(|batch| batch.num_rows()).sum()
+    }
 }
 
 #[async_trait]
