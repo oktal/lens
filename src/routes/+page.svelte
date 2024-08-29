@@ -14,7 +14,8 @@
 	<Resizable.Pane defaultSize={20} class="h-screen">
 		<Collapsible.Root open>
 			<Collapsible.Trigger asChild let:builder>
-				<Button builders={[builder]} variant="outline" class="flex w-full justify-start gap-1">
+				<Button builders={[builder]} variant="outline" class="flex w-full justify-start gap-2">
+					<Icon icon="carbon:cube" width={18} height={18} />
 					Entities
 					<Icon icon="carbon:chevron-sort" class="ml-auto" width={22} height={22} />
 				</Button>
@@ -33,7 +34,8 @@
 
 		<Collapsible.Root open>
 			<Collapsible.Trigger asChild let:builder>
-				<Button builders={[builder]} variant="outline" class="flex w-full justify-start gap-1">
+				<Button builders={[builder]} variant="outline" class="flex w-full justify-start gap-2">
+					<Icon icon="carbon:catalog" width={18} height={18} />
 					Query history
 					<Icon icon="carbon:chevron-sort" class="ml-auto" width={22} height={22} />
 				</Button>
