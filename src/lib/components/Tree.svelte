@@ -66,7 +66,11 @@
 								<Collapsible.Content>
 									<div class="pl-5">
 										{#each fields as { name, data_type: { kind, logical } }}
-											<Button variant="ghost" size="sm" class="flex w-full justify-start gap-1">
+											<Button
+												variant="ghost"
+												size="sm"
+												class="flex h-8 w-full items-center justify-start gap-1"
+											>
 												<Icon icon={logicalTypeIcons[logical]} width={18} height={18} />
 												{name}
 												<span class="ml-auto mr-5 text-xs font-bold text-gray-400">
