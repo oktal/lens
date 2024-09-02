@@ -48,7 +48,8 @@ impl Lens {
         // Setup session
         let config = SessionConfig::new()
             .with_information_schema(false)
-            .with_create_default_catalog_and_schema(false);
+            .with_create_default_catalog_and_schema(true)
+            .with_default_catalog_and_schema("datalens", "default");
 
         let ctx = SessionContext::new_with_config(config);
 
