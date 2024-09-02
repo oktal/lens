@@ -5,34 +5,46 @@
 	import Icon from '@iconify/svelte';
 	import { queriesStore } from '$lib/stores/queries.svelte';
 	import type { StreamId } from '$lib/lens/types';
+	import { queryPaneGroup } from './QueryPaneGroup.svelte';
+	import { toast } from 'svelte-sonner';
 
-	function renewStream({ id }: { id: StreamId }) {}
+	function renewStream({ id }: { id: StreamId }) {
+		try {
+			queryPaneGroup.renew(0, id);
+		} catch (e) {
+			toast.error(`${e}`);
+		}
+	}
 </script>
 
 <div class="flex flex-col gap-2">
 	{#each queriesStore.streams as stream}
+		{@const streamInfo = queriesStore.getStreamInfo(stream)}
 		<div class="flex flex-row">
 			<Label class="flex flex-col">
-				<span>{stream.id}</span>
-				<span class="text-pretty text-xs text-muted-foreground">{stream.query}</span>
+				<span>{streamInfo.id}</span>
+				<span class="text-pretty text-xs text-muted-foreground">{streamInfo.query}</span>
 				{#if stream.kind === 'full'}
-					<span class="text-pretty text-xs text-muted-foreground"
-						>{stream.stream.rows.length} rows</span
-					>
+					<div class="flex gap-1">
+						<Icon icon="carbon:save" width={16} height={16} />
+						<span class="text-pretty text-xs text-muted-foreground"
+							>{stream.stream.rows.length} rows</span
+						>
+					</div>
 				{/if}
 			</Label>
 
 			<div class="ml-auto flex flex-nowrap">
-				<!-- {@render controlItem({ -->
-				<!-- 	icon: 'carbon:renew', -->
-				<!-- 	tooltip: 'Renew', -->
-				<!-- 	action: renewStream({ id: stream.id }) -->
-				<!-- })} -->
+				{@render controlItem({
+					icon: 'carbon:renew',
+					tooltip: 'Renew',
+					action: () => renewStream({ id: streamInfo.id })
+				})}
 
 				{@render controlItem({
 					icon: 'carbon:trash-can',
 					tooltip: 'Delete',
-					action: () => queriesStore.delete(stream.id)
+					action: () => queriesStore.delete(streamInfo.id)
 				})}
 			</div>
 		</div>

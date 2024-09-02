@@ -1,7 +1,3 @@
-<script lang="ts" context="module">
-	export type SplitDirection = 'vertical' | 'horizontal';
-</script>
-
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index';
 	import { Label } from '$lib/components/ui/label';
@@ -10,35 +6,32 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
 	import Icon from '@iconify/svelte';
-	import { type QueryStream } from '$lib/stores/QueryStream.svelte';
 	import QueryResultsTable from './QueryResultsTable.svelte';
 	import { mount } from 'svelte';
 	import ExportDialog from './dialog/ExportDialog.svelte';
 	import { toast } from 'svelte-sonner';
 	import { client } from '$lib/lens/api';
-	import { queriesStore } from '$lib/stores/queries.svelte';
+	import { queryPaneGroup, type SplitDirection } from './QueryPaneGroup.svelte';
 
 	interface Props {
-		onSplit: (directory: SplitDirection) => void;
 		direction?: SplitDirection;
+		paneId: number;
 
 		closable?: boolean;
-		onClose?: () => void;
 	}
 
-	let { onSplit, direction, onClose, closable = false }: Props = $props();
+	let { direction, paneId, closable = false }: Props = $props();
 
 	let queryString = $state('');
-	let queryStream = $state<QueryStream | undefined>(undefined);
 	let queryError: any | undefined = $state(undefined);
 
 	async function runQuery() {
 		const handleError = (error: any) => {
 			queryError = error;
-			queryStream = undefined;
 		};
 
 		const fetch = async () => {
+			const queryStream = queryPaneGroup.panes[paneId]?.stream;
 			try {
 				while (queryStream && queryStream.state === 'running' && queryStream.hasNext) {
 					await queryStream.fetchNext();
@@ -48,13 +41,14 @@
 			}
 		};
 
+		const queryStream = queryPaneGroup.panes[paneId]?.stream;
 		if (queryStream?.state === 'paused') {
 			queryStream.resume();
 			fetch();
 		} else {
 			try {
 				queryError = undefined;
-				queryStream = await queriesStore.run(queryString);
+				await queryPaneGroup.run(paneId, queryString);
 			} catch (e) {
 				handleError(e);
 			}
@@ -64,6 +58,7 @@
 	}
 
 	async function exportResults() {
+		const queryStream = queryPaneGroup.panes[paneId]?.stream;
 		if (queryStream === undefined) return;
 
 		const dialog = mount(ExportDialog, {
@@ -80,10 +75,10 @@
 		}
 	}
 
-	function clear() {
-		queryString = '';
-		queryStream = undefined;
-	}
+	$effect(() => {
+		if (queryPaneGroup.panes[paneId]?.stream?.query !== undefined)
+			queryString = queryPaneGroup.panes[paneId]?.stream?.query;
+	});
 </script>
 
 <div class="flex flex-col gap-1">
@@ -100,14 +95,15 @@
 
 	<Separator />
 
-	{#if queryStream}
+	{#if queryPaneGroup.panes[paneId]?.stream}
 		<div class="m-4">
-			<QueryResultsTable stream={queryStream} />
+			<QueryResultsTable stream={queryPaneGroup.panes[paneId].stream} />
 		</div>
 	{/if}
 </div>
 
 {#snippet topBar()}
+	{@const queryStream = queryPaneGroup.panes[paneId]?.stream}
 	<div class="flex h-14 flex-row items-center gap-1 border">
 		<div class="ml-2">
 			{@render topBarItem({
@@ -140,7 +136,7 @@
 			{@render topBarItem({
 				icon: 'carbon:export',
 				tooltip: 'Export',
-				disabled: queryStream === undefined,
+				disabled: queryPaneGroup.panes[paneId] === undefined,
 				action: exportResults
 			})}
 
@@ -148,14 +144,14 @@
 				icon: 'carbon:erase',
 				tooltip: 'Clear',
 				disabled: queryStream === undefined,
-				action: clear
+				action: () => queryPaneGroup.clear(paneId)
 			})}
 
 			{@render topBarItem({
 				icon: 'carbon:save',
 				tooltip: 'Save results to history',
 				disabled: queryStream === undefined,
-				action: () => queryStream && queriesStore.save(queryStream)
+				action: () => queryPaneGroup.save(paneId)
 			})}
 		</div>
 
@@ -165,7 +161,7 @@
 					variant="secondary"
 					size="sm"
 					class="flex gap-1"
-					on:click={() => onClose && onClose()}
+					on:click={() => queryPaneGroup.close(paneId)}
 				>
 					{#if direction === 'horizontal'}
 						<Icon icon="carbon:side-panel-close-filled" width={18} height={18} />
@@ -213,11 +209,11 @@
 		>
 		<DropdownMenu.Content>
 			<DropdownMenu.Group>
-				<DropdownMenu.Item class="flex gap-1" on:click={() => onSplit('horizontal')}>
+				<DropdownMenu.Item class="flex gap-1" on:click={() => queryPaneGroup.split('horizontal')}>
 					<Icon icon="mdi:arrow-split-vertical" width={20} height={20} />
 					Vertical
 				</DropdownMenu.Item>
-				<DropdownMenu.Item class="flex gap-1" on:click={() => onSplit('vertical')}>
+				<DropdownMenu.Item class="flex gap-1" on:click={() => queryPaneGroup.split('vertical')}>
 					<Icon icon="mdi:arrow-split-vertical" class="rotate-90" width={20} height={20} />
 					Horizontal
 				</DropdownMenu.Item>

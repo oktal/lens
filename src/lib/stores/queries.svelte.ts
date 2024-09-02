@@ -1,13 +1,18 @@
 import type { StreamId } from "$lib/lens/types";
 import { useQueryStream, type QueryStream } from "./QueryStream.svelte";
 
-type PartialStream = {
-  kind: 'partial',
-  query: string;
+type StreamInfo = {
   id: StreamId;
+  query: string;
 }
 
-type Stream = PartialStream | { kind: 'full', id: StreamId, query: string, stream: QueryStream };
+type Stream = {
+  kind: 'partial',
+  id: StreamId;
+  query: string;
+} |
+{ kind: 'full', stream: QueryStream };
+
 
 class QueriesStore {
   private maxHistory?: number;
@@ -41,16 +46,12 @@ class QueriesStore {
   }
 
   save(stream: QueryStream): boolean {
-    let index = this.streams.findIndex(s => s.id === stream.streamId);
+    let index = this.streams.findIndex(s => stream.streamId === this.getStreamId(s));
     if (index === undefined)
       return false;
 
-    const { streamId: id, query } = stream;
-
     this.streams[index] = {
       kind: 'full',
-      id,
-      query,
       stream
     };
 
@@ -59,8 +60,30 @@ class QueriesStore {
 
   delete(id: StreamId): boolean {
     const oldLen = this.streams.length;
-    this.streams = this.streams.filter(s => s.id !== id);
+    this.streams = this.streams.filter(s => id !== this.getStreamId(s));
     return oldLen > this.streams.length;
+  }
+
+  get(id: StreamId): Stream | undefined {
+    return this.streams.find(s => id === this.getStreamId(s));
+  }
+
+  getStreamInfo(stream: Stream): StreamInfo {
+    if (stream.kind === 'partial') {
+      const { id, query } = stream;
+      return { id, query };
+    }
+    else if (stream.kind === 'full') {
+      const { streamId: id, query } = stream.stream;
+      return { id, query };
+
+    }
+
+    throw new Error("Can't determine information for stream");
+  }
+
+  getStreamId(stream: Stream): StreamId {
+    return this.getStreamInfo(stream).id;
   }
 }
 

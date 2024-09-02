@@ -1,24 +1,19 @@
 <script lang="ts">
-	import QueryPane, { type SplitDirection } from './QueryPane.svelte';
+	import QueryPane from './QueryPane.svelte';
 	import * as Resizable from '$lib/components/ui/resizable';
-
-	let direction = $state<SplitDirection | undefined>(undefined);
-
-	function onSplit(split: SplitDirection) {
-		direction = split;
-	}
+	import { queryPaneGroup } from './QueryPaneGroup.svelte';
 </script>
 
-{#if direction}
-	<Resizable.PaneGroup {direction}>
+{#if queryPaneGroup.panes.length > 1}
+	<Resizable.PaneGroup direction={queryPaneGroup.direction!}>
 		<Resizable.Pane>
-			<QueryPane {onSplit} />
+			<QueryPane paneId={0} />
 		</Resizable.Pane>
 		<Resizable.Handle withHandle />
 		<Resizable.Pane>
-			<QueryPane {onSplit} closable {direction} onClose={() => (direction = undefined)} />
+			<QueryPane paneId={1} closable direction={queryPaneGroup.direction!} />
 		</Resizable.Pane>
 	</Resizable.PaneGroup>
 {:else}
-	<QueryPane {onSplit} />
+	<QueryPane paneId={0} />
 {/if}
