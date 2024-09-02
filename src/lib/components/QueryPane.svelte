@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button/index';
 	import { Label } from '$lib/components/ui/label';
 	import { Separator } from '$lib/components/ui/separator';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
@@ -78,8 +79,8 @@
 	}
 
 	$effect(() => {
-		if (queryPaneGroup.panes[paneId]?.stream?.query !== undefined)
-			queryString = queryPaneGroup.panes[paneId]?.stream?.query;
+		if (queryPaneGroup.panes[paneId]?.query !== undefined)
+			queryString = queryPaneGroup.panes[paneId]?.query;
 	});
 </script>
 
