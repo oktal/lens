@@ -12,6 +12,7 @@ type PaneInfo = {
 export class QueryPaneGroup {
   direction = $state<SplitDirection | undefined>(undefined);
   panes = $state<PaneInfo[]>([undefined]);
+  overlayVisible = $state(false);
 
   constructor() {
   }
@@ -79,6 +80,21 @@ export class QueryPaneGroup {
       stream
     }
     return stream;
+  }
+
+  showOverlay() {
+    this.overlayVisible = true;
+  }
+
+  hideOverlay() {
+    this.overlayVisible = false;
+  }
+
+  toggleOverlay(visible: boolean) {
+    if (visible)
+      this.showOverlay();
+    else
+      this.hideOverlay();
   }
 }
 

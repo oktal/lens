@@ -25,6 +25,8 @@
 	let queryString = $state('');
 	let queryError: any | undefined = $state(undefined);
 
+	const paneOverlayId = paneId + 1;
+
 	async function runQuery() {
 		const handleError = (error: any) => {
 			queryError = error;
@@ -81,7 +83,7 @@
 	});
 </script>
 
-<div class="flex flex-col gap-1">
+<div class="relative flex h-full w-full flex-col gap-1">
 	{@render topBar()}
 
 	<div class="m-4 flex flex-col gap-2">
@@ -98,6 +100,12 @@
 	{#if queryPaneGroup.panes[paneId]?.stream}
 		<div class="m-4">
 			<QueryResultsTable stream={queryPaneGroup.panes[paneId].stream} />
+		</div>
+	{/if}
+
+	{#if queryPaneGroup.overlayVisible}
+		<div class="absolute bottom-0 left-0 z-50">
+			<Icon icon="carbon:number-{paneOverlayId}" width={80} height={80} />
 		</div>
 	{/if}
 </div>

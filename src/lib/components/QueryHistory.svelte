@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Label } from '$lib/components/ui/label';
 	import { Button } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
 	import Icon from '@iconify/svelte';
 	import { queriesStore } from '$lib/stores/queries.svelte';
@@ -8,9 +9,9 @@
 	import { queryPaneGroup } from './QueryPaneGroup.svelte';
 	import { toast } from 'svelte-sonner';
 
-	function renewStream({ id }: { id: StreamId }) {
+	function renewStream({ paneId, streamId }: { paneId: number; streamId: StreamId }) {
 		try {
-			queryPaneGroup.renew(0, id);
+			queryPaneGroup.renew(paneId, streamId);
 		} catch (e) {
 			toast.error(`${e}`);
 		}
@@ -34,12 +35,40 @@
 				{/if}
 			</Label>
 
-			<div class="ml-auto flex flex-nowrap">
-				{@render controlItem({
-					icon: 'carbon:renew',
-					tooltip: 'Renew',
-					action: () => renewStream({ id: streamInfo.id })
-				})}
+			<div class="ml-auto flex flex-nowrap items-center">
+				{#if queryPaneGroup.panes.length == 1}
+					{@render controlItem({
+						icon: 'carbon:renew',
+						tooltip: 'Renew',
+						action: () => renewStream({ paneId: 0, streamId: streamInfo.id })
+					})}
+				{:else}
+					<DropdownMenu.Root
+						onOpenChange={(toggle: boolean) => queryPaneGroup.toggleOverlay(toggle)}
+					>
+						<DropdownMenu.Trigger>
+							<Tooltip.Root>
+								<Tooltip.Trigger asChild let:builder>
+									<Button builders={[builder]} variant="ghost" size="icon">
+										<Icon icon="carbon:renew" width={18} height={18} />
+									</Button>
+								</Tooltip.Trigger>
+								<Tooltip.Content>
+									<p>Renew</p>
+								</Tooltip.Content>
+							</Tooltip.Root>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content>
+							{#each queryPaneGroup.panes as _, paneId}
+								<DropdownMenu.Item
+									on:click={() => renewStream({ paneId, streamId: streamInfo.id })}
+								>
+									<Icon icon="carbon:number-{paneId + 1}" width={24} height={24} />
+								</DropdownMenu.Item>
+							{/each}
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+				{/if}
 
 				{@render controlItem({
 					icon: 'carbon:trash-can',
