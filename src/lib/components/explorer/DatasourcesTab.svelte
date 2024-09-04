@@ -1,10 +1,11 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import Button from './ui/button/button.svelte';
-	import DatasourceDialog from './dialog/DatasourceDialog.svelte';
-	import { toast } from 'svelte-sonner';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import DatasourceDialog from '$lib/components/dialog/DatasourceDialog.svelte';
 	import type { DatasourceConfig } from '$lib/lens/types';
 	import { client } from '$lib/lens/api';
+
+	import { toast } from 'svelte-sonner';
 
 	type DatasourceItem = { kind: 's3' | 'gcs'; url: string; config: Array<string> };
 

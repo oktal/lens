@@ -6,7 +6,7 @@
 	import Icon from '@iconify/svelte';
 	import { queriesStore } from '$lib/stores/queries.svelte';
 	import type { StreamId } from '$lib/lens/types';
-	import { queryPaneGroup } from './QueryPaneGroup.svelte';
+	import { queryPaneGroup } from '$lib/components/query/QueryPaneGroup.svelte';
 	import { toast } from 'svelte-sonner';
 
 	function renewStream({ paneId, streamId }: { paneId: number; streamId: StreamId }) {

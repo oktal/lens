@@ -1,15 +1,17 @@
 <script lang="ts">
-	import { type QueryStream } from '$lib/stores/QueryStream.svelte';
-	import QueryResultHeader from './QueryResultHeader.svelte';
 	import * as Select from '$lib/components/ui/select';
 	import * as Table from '$lib/components/ui/table';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { Textarea } from './ui/textarea';
+	import { Label } from '$lib/components/ui/label';
+	import Progress from '$lib/components/ui/progress/progress.svelte';
+	import { Textarea } from '$lib/components/ui/textarea';
+
+	import { type QueryStream } from '$lib/stores/QueryStream.svelte';
+	import QueryResultHeader from './QueryResultHeader.svelte';
+
 	import Icon from '@iconify/svelte';
-	import { Label } from './ui/label';
-	import Progress from './ui/progress/progress.svelte';
 	import type {
 		ColumnDef,
 		PaginationState,

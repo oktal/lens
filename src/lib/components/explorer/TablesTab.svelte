@@ -1,17 +1,19 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import { Spinner } from '$lib/components/ui/spinner';
+
 	import Icon from '@iconify/svelte';
 	import { client } from '$lib/lens/api';
 	import type { Database } from '$lib/lens/types';
 
 	import DatabaseDialog from '$lib/components/dialog/DatabaseDialog.svelte';
-	import Tree from './Tree.svelte';
-	import Button from './ui/button/button.svelte';
+	import SchemaDialog from '$lib/components/dialog/SchemaDialog.svelte';
+	import TableDialog from '$lib/components/dialog/TableDialog.svelte';
+	import EntityTree from './EntityTree.svelte';
+
 	import { toast } from 'svelte-sonner';
-	import SchemaDialog from './dialog/SchemaDialog.svelte';
-	import TableDialog from './dialog/TableDialog.svelte';
 	import { mount } from 'svelte';
-	import { Spinner } from './ui/spinner';
 
 	let databases = $state<Database[]>([]);
 	let loadPromise = $state<Promise<void>>(Promise.resolve());
@@ -146,7 +148,7 @@
 		{@render addMenu(addMenuItems)}
 	</div>
 
-	<Tree {databases} />
+	<EntityTree {databases} />
 </div>
 
 {#snippet addMenu(items: MenuItem[])}

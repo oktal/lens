@@ -1,7 +1,7 @@
 <script lang="ts">
-	import QueryPane from './QueryPane.svelte';
+	import QueryPane from '$lib/components/query/QueryPane.svelte';
 	import * as Resizable from '$lib/components/ui/resizable';
-	import { queryPaneGroup } from './QueryPaneGroup.svelte';
+	import { queryPaneGroup } from '$lib/components/query/QueryPaneGroup.svelte';
 </script>
 
 {#if queryPaneGroup.panes.length > 1}

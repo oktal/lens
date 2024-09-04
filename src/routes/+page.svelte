@@ -1,14 +1,16 @@
 <script lang="ts">
-	import TablesTab from '$lib/components/TablesTab.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Resizable from '$lib/components/ui/resizable';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import DatasourcesTab from '$lib/components/DatasourcesTab.svelte';
-	import QueryTab from '$lib/components/QueryTab.svelte';
+
+	import TablesTab from '$lib/components/explorer/TablesTab.svelte';
+	import DatasourcesTab from '$lib/components/explorer/DatasourcesTab.svelte';
+	import QueryTab from '$lib/components/explorer/QueryTab.svelte';
+	import QueryHistory from '$lib/components/explorer/QueryHistory.svelte';
+
 	import Icon from '@iconify/svelte';
-	import QueryHistory from '$lib/components/QueryHistory.svelte';
 </script>
 
 <Resizable.PaneGroup direction="horizontal" class="h-screen items-stretch rounded-lg border">

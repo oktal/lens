@@ -6,13 +6,15 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
-	import Icon from '@iconify/svelte';
+
+	import ExportDialog from '$lib/components/dialog/ExportDialog.svelte';
 	import QueryResultsTable from './QueryResultsTable.svelte';
+	import { queryPaneGroup, type SplitDirection } from './QueryPaneGroup.svelte';
+
+	import Icon from '@iconify/svelte';
 	import { mount } from 'svelte';
-	import ExportDialog from './dialog/ExportDialog.svelte';
 	import { toast } from 'svelte-sonner';
 	import { client } from '$lib/lens/api';
-	import { queryPaneGroup, type SplitDirection } from './QueryPaneGroup.svelte';
 
 	interface Props {
 		direction?: SplitDirection;
