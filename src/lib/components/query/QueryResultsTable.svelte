@@ -33,7 +33,7 @@
 
 	const columnHelper = createColumnHelper<string[]>();
 
-	const columns: ColumnDef<string[], string>[] = [
+	const columns: ColumnDef<string[], string>[] = $derived([
 		columnHelper.display({
 			id: 'rowIndex',
 			header: ({ header }) => renderComponent(QueryResultHeader, { label: '#', header }),
@@ -45,7 +45,7 @@
 				header: ({ header }) => renderComponent(QueryResultHeader, { label: column, header })
 			});
 		})
-	];
+	]);
 
 	let sorting = $state<SortingState>([]);
 	let pagination = $state<PaginationState>({
