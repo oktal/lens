@@ -1,11 +1,11 @@
 [package]
-name = "app"
+name = "lens"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
-default-run = "app"
+description = "An application to run SQL queries on structured files like csv, parquet, json"
+authors = ["Mathieu Stefani"]
+license = "MIT"
+repository = "https://github.com/oktal/lens"
+default-run = "lens"
 edition = "2021"
 rust-version = "1.60"
 
