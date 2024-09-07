@@ -140,7 +140,7 @@
 			{@render topBarItem({
 				icon: 'carbon:export',
 				tooltip: 'Export',
-				disabled: queryPaneGroup.panes[paneId] === undefined,
+				disabled: queryPaneGroup.panes[paneId].stream === undefined,
 				action: exportResults
 			})}
 
