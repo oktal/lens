@@ -53,7 +53,7 @@
 		pageSize: 10
 	});
 
-	let table = $state(createResultsTable());
+	let table = $derived(createResultsTable());
 
 	let start = $derived(pagination.pageIndex * pagination.pageSize);
 	let end = $derived(Math.min(start + pagination.pageSize, stream.rows.length));
@@ -121,12 +121,6 @@
 
 		return values;
 	}
-
-	$effect(() => {
-		if (stream.rows.length > 0) {
-			table = createResultsTable();
-		}
-	});
 </script>
 
 <Tabs.Root value="table">
