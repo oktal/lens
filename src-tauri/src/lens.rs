@@ -106,6 +106,12 @@ impl Lens {
         count
     }
 
+    pub async fn stream_close(&self, id: StreamId) -> LensResult<()> {
+        let (req, rx) = QueryStreamRequest::close(id);
+        self.stream_tx.send(req).await?;
+        rx.await?
+    }
+
     pub async fn stream_list(&self) -> LensResult<Vec<StreamInfo>> {
         let (req, rx) = QueryStreamRequest::list();
         self.stream_tx.send(req).await?;

@@ -8,6 +8,12 @@
 	import type { StreamId } from '$lib/lens/types';
 	import { queryPaneGroup } from '$lib/components/query/QueryPaneGroup.svelte';
 	import { toast } from 'svelte-sonner';
+	import { client } from '$lib/lens/api';
+
+	async function deleteStream(streamId: StreamId) {
+		queriesStore.delete(streamId);
+		await client.stream.close(streamId);
+	}
 
 	function renewStream({ paneId, streamId }: { paneId: number; streamId: StreamId }) {
 		try {
@@ -73,7 +79,7 @@
 				{@render controlItem({
 					icon: 'carbon:trash-can',
 					tooltip: 'Delete',
-					action: () => queriesStore.delete(streamInfo.id)
+					action: () => deleteStream(streamInfo.id)
 				})}
 			</div>
 		</div>

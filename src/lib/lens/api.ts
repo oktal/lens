@@ -29,6 +29,7 @@ export type Client = {
 
   stream: {
     export: (streamId: StreamId, options: ExportOptions) => Promise<number>,
+    close: (streamId: StreamId) => Promise<void>,
     list: () => Promise<StreamInfo[]>,
   }
 }
@@ -231,6 +232,9 @@ export const client: Client = {
   stream: {
     export: (streamId: StreamId, options: ExportOptions): Promise<number> => {
       return invoke('stream_export', { id: streamId, options })
+    },
+    close: (streamId: StreamId): Promise<void> => {
+      return invoke('stream_close', { id: streamId })
     },
     list: (): Promise<StreamInfo[]> => {
       return invoke<StreamInfo[]>('stream_list')

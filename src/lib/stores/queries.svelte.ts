@@ -39,9 +39,6 @@ class QueriesStore {
 
     const stream = await useQueryStream(query);
     addToHistory({ stream });
-
-    console.log(this.streams);
-
     return stream;
   }
 

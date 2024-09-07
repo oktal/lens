@@ -15,6 +15,11 @@ pub async fn stream_export(
 }
 
 #[tauri::command]
+pub async fn stream_close(lens: tauri::State<'_, Lens>, id: StreamId) -> LensResult<()> {
+    lens.stream_close(id).await
+}
+
+#[tauri::command]
 pub async fn stream_list(lens: tauri::State<'_, Lens>) -> LensResult<Vec<StreamInfo>> {
     lens.stream_list().await
 }

@@ -72,6 +72,13 @@ pub enum QueryStreamRequest {
         resp_tx: oneshot::Sender<LensResult<usize>>,
     },
 
+    /// Close and remove from memory any data fetched by a given [`StreamId`]
+    Close {
+        id: StreamId,
+
+        resp_tx: oneshot::Sender<LensResult<()>>,
+    },
+
     /// List all the active streams
     List {
         resp_tx: oneshot::Sender<LensResult<Vec<common::StreamInfo>>>,
@@ -109,6 +116,11 @@ impl QueryStreamRequest {
             },
             resp_rx,
         )
+    }
+
+    pub fn close(id: StreamId) -> (Self, oneshot::Receiver<LensResult<()>>) {
+        let (resp_tx, resp_rx) = oneshot::channel();
+        (Self::Close { id, resp_tx }, resp_rx)
     }
 
     pub fn list() -> (Self, oneshot::Receiver<LensResult<Vec<common::StreamInfo>>>) {
@@ -191,11 +203,11 @@ impl QueryStreamer {
     async fn handle_request(&mut self, req: QueryStreamRequest) {
         match req {
             QueryStreamRequest::Initiate { sql, resp_tx } => {
-                let _ = resp_tx.send(self.stream_create(sql).await);
+                let _ = resp_tx.send(self.create(sql).await);
             }
 
             QueryStreamRequest::Next { id, resp_tx } => {
-                let _ = resp_tx.send(self.stream_next(id).await.map_err(Into::into));
+                let _ = resp_tx.send(self.next(id).await.map_err(Into::into));
             }
 
             QueryStreamRequest::Export {
@@ -203,16 +215,20 @@ impl QueryStreamer {
                 options,
                 resp_tx,
             } => {
-                let _ = resp_tx.send(self.stream_export(id, options).await.map_err(Into::into));
+                let _ = resp_tx.send(self.export(id, options).await.map_err(Into::into));
+            }
+
+            QueryStreamRequest::Close { id, resp_tx } => {
+                let _ = resp_tx.send(self.close(id).map_err(Into::into));
             }
 
             QueryStreamRequest::List { resp_tx } => {
-                let _ = resp_tx.send(self.stream_list().map_err(Into::into));
+                let _ = resp_tx.send(self.list().map_err(Into::into));
             }
         }
     }
 
-    async fn stream_create(&mut self, query: String) -> LensResult<StreamId> {
+    async fn create(&mut self, query: String) -> LensResult<StreamId> {
         let df = self.ctx.sql(&query).await?;
 
         let schema = Arc::clone(df.schema().inner());
@@ -226,7 +242,7 @@ impl QueryStreamer {
         Ok(stream_id)
     }
 
-    async fn stream_next(&mut self, id: StreamId) -> StreamResult<Option<Vec<common::Row>>> {
+    async fn next(&mut self, id: StreamId) -> StreamResult<Option<Vec<common::Row>>> {
         let Some(entry) = self.streams.get_mut(&id) else {
             return Err(StreamError::UnknownStream(id));
         };
@@ -267,7 +283,7 @@ impl QueryStreamer {
         Ok(Some(rows))
     }
 
-    async fn stream_export(&mut self, id: StreamId, options: ExportOptions) -> StreamResult<usize> {
+    async fn export(&mut self, id: StreamId, options: ExportOptions) -> StreamResult<usize> {
         let Some(entry) = self.streams.get(&id) else {
             return Err(StreamError::UnknownStream(id));
         };
@@ -315,7 +331,14 @@ impl QueryStreamer {
         Ok(count.unwrap_or(0) as usize)
     }
 
-    fn stream_list(&self) -> StreamResult<Vec<common::StreamInfo>> {
+    fn close(&mut self, id: StreamId) -> StreamResult<()> {
+        self.streams
+            .remove(&id)
+            .ok_or(StreamError::UnknownStream(id))?;
+        Ok(())
+    }
+
+    fn list(&self) -> StreamResult<Vec<common::StreamInfo>> {
         Ok(self
             .streams
             .iter()
