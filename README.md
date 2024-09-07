@@ -3,6 +3,10 @@
   <img alt="lens" src="./assets/lens.svg" width="64" height="64" />
 </p>
 
+
+[![LICENSE][license-badge]][license]
+![build-badge]
+
 <p align="center">
   Lens through your data. Built with <img alt="tauri" src="./assets/tauri.svg" width="24" height="24" /> <a href="https://tauri.app/">Tauri</a>
 </p>
@@ -60,3 +64,8 @@ npm run tauri dev
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+[license]: LICENSE
+[license-badge]: https://img.shields.io/badge/license-MIT-green
+[build-badge]: https://img.shields.io/github/actions/workflow/status/oktal/lens/build
+
