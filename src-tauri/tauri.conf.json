@@ -32,7 +32,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.datalens.app",
+      "identifier": "io.lensapp",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -65,7 +65,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "datalens",
+        "title": "lens",
         "width": 800
       }
     ]
