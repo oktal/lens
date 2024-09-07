@@ -17,8 +17,8 @@
 
 ## 💡 About
 
-Powerful, lightweight application that provides an interactive interface to run SQL queries on structured files, including Parquet, CSV, and JSON formats.
-You can use Lens locally or directly access data stored in cloud services like Amazon AWS or Google GCP.
+Powerful, lightweight application that provides an interactive interface to run SQL queries on structured files, including Parquet, CSV, and JSON formats. <br />
+You can use Lens locally or directly access data stored in cloud services like Amazon AWS or Google GCP. <br />
 Lens simplifies data analysis by allowing you to query, transform, and visualize data without complex setup or external databases.
 
 ## Table of Contents
@@ -76,6 +76,11 @@ npm run tauri dev
 - [ ] Configuration options
   - [ ] Expose DataFusion session configuration parameters in the UI
   - [ ] Profile-based configuration
+     
+## Sponsor
+
+Lens is a free and open-source software but if you want to sponsor me, as a specialty coffee lover you can <br />
+<a href="https://www.buymeacoffee.com/octal" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 ## License
 
