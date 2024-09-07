@@ -5,13 +5,26 @@ import type { QueryStream } from "$lib/stores/QueryStream.svelte";
 export type SplitDirection = 'vertical' | 'horizontal';
 
 type PaneInfo = {
-  query?: string,
+  get query(): string,
+  set query(val: string),
+
   stream?: QueryStream,
-} | undefined;
+};
+
+function usePane(queryString?: string): PaneInfo {
+  let query = $state(queryString ?? '');
+
+  return {
+    get query(): string { return query },
+    set query(val: string) { query = val },
+
+    stream: undefined,
+  };
+}
 
 export class QueryPaneGroup {
   direction = $state<SplitDirection | undefined>(undefined);
-  panes = $state<PaneInfo[]>([undefined]);
+  panes = $state<PaneInfo[]>([usePane(undefined)]);
   overlayVisible = $state(false);
 
   constructor() {
@@ -21,15 +34,17 @@ export class QueryPaneGroup {
     this.direction = direction;
 
     if (this.panes.length == 1) {
-      this.panes.push(undefined);
+      this.panes.push(usePane(undefined))
     }
+
+    console.log(this.panes);
   }
 
   close(paneId: number) {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
 
-    this.panes = this.panes.splice(paneId, 1);
+    this.panes.splice(paneId, 1);
   }
 
   renew(paneId: number, streamId: StreamId) {
@@ -66,13 +81,17 @@ export class QueryPaneGroup {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
 
-    this.panes[paneId] = undefined;
-
+    this.panes[paneId].stream = undefined;
+    this.panes[paneId].query = '';
   }
 
-  async run(paneId: number, query: string): Promise<QueryStream> {
+  async run(paneId: number): Promise<QueryStream> {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
+
+    const query = this.panes[paneId]?.query;
+    if (!query)
+      throw new Error(`query is undefined`);
 
     const stream = await queriesStore.run(query);
     this.panes[paneId] = {

@@ -2,7 +2,6 @@
 	import { Button } from '$lib/components/ui/button/index';
 	import { Label } from '$lib/components/ui/label';
 	import { Separator } from '$lib/components/ui/separator';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
@@ -25,7 +24,6 @@
 
 	let { direction, paneId, closable = false }: Props = $props();
 
-	let queryString = $state('');
 	let queryError: any | undefined = $state(undefined);
 
 	const paneOverlayId = paneId + 1;
@@ -53,7 +51,7 @@
 		} else {
 			try {
 				queryError = undefined;
-				await queryPaneGroup.run(paneId, queryString);
+				await queryPaneGroup.run(paneId);
 			} catch (e) {
 				handleError(e);
 			}
@@ -79,11 +77,6 @@
 			toast.error(`Failed to export data: ${e}`);
 		}
 	}
-
-	$effect(() => {
-		if (queryPaneGroup.panes[paneId]?.query !== undefined)
-			queryString = queryPaneGroup.panes[paneId]?.query;
-	});
 </script>
 
 <div class="relative flex h-full w-full flex-col gap-1">
@@ -91,7 +84,7 @@
 
 	<div class="m-4 flex flex-col gap-2">
 		<Label for="query" class="text-sm font-semibold">Query</Label>
-		<Textarea id="query" bind:value={queryString} />
+		<Textarea id="query" bind:value={queryPaneGroup.panes[paneId]!.query} />
 
 		{#if queryError}
 			<p class="text-red-600">{queryError}</p>
@@ -120,7 +113,7 @@
 			{@render topBarItem({
 				icon: 'carbon:play',
 				tooltip: queryStream?.state === 'paused' ? 'Resume query' : 'Execute query',
-				disabled: queryStream?.state === 'running' || queryString == '',
+				disabled: queryStream?.state === 'running' || queryPaneGroup.panes[paneId]?.query == '',
 				action: runQuery
 			})}
 
@@ -175,9 +168,21 @@
 					on:click={() => queryPaneGroup.close(paneId)}
 				>
 					{#if direction === 'horizontal'}
-						<Icon icon="carbon:side-panel-close-filled" width={18} height={18} />
+						{@const rotationClass = paneId == 0 ? 'rotate-180' : ''}
+						<Icon
+							icon="carbon:side-panel-close-filled"
+							class={rotationClass}
+							width={18}
+							height={18}
+						/>
 					{:else if direction === 'vertical'}
-						<Icon icon="carbon:side-panel-close-filled" class="rotate-90" width={18} height={18} />
+						{@const rotationClass = paneId == 0 ? '-rotate-90' : 'rotate-90'}
+						<Icon
+							icon="carbon:side-panel-close-filled"
+							class={rotationClass}
+							width={18}
+							height={18}
+						/>
 					{/if}
 					Close
 				</Button>

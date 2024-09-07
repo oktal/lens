@@ -20,9 +20,6 @@ importers:
       lucide-svelte:
         specifier: ^0.424.0
         version: 0.424.0(svelte@5.0.0-next.210)
-      mode-watcher:
-        specifier: ^0.4.1
-        version: 0.4.1(svelte@5.0.0-next.210)
       paneforge:
         specifier: ^0.0.5
         version: 0.0.5(svelte@5.0.0-next.210)
@@ -81,6 +78,9 @@ importers:
       globals:
         specifier: ^15.9.0
         version: 15.9.0
+      mode-watcher:
+        specifier: ^0.4.1
+        version: 0.4.1(svelte@5.0.0-next.210)
       postcss:
         specifier: ^8.4.41
         version: 8.4.41
