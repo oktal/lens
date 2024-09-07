@@ -6,6 +6,8 @@
 
 [![LICENSE][license-badge]][license]
 ![build-badge]
+![rust-badge]
+![svelte-badge]
 
 <p align="center">
   Lens through your data. Built with <img alt="tauri" src="./assets/tauri.svg" width="24" height="24" /> <a href="https://tauri.app/">Tauri</a>
@@ -22,6 +24,7 @@ Lens simplifies data analysis by allowing you to query, transform, and visualize
 - [Features](#features)
 - [Installation](#installation)
   - [From source](#from-source)
+- [Roadmap](#roadmap)
 - [License](#license)
 
 ## Features
@@ -61,11 +64,22 @@ Once you followed all the steps described in the previous section, build and sta
 npm install
 npm run tauri dev
 ```
+
+## Roadmap
+ - [ ] Monaco-based SQL editor
+   - [ ] Syntax highlighting
+   - [ ] Auto completion
+- [ ] Charts 
+- [ ] Configuration options
+  - [ ] Expose DataFusion session configuration parameters in the UI
+  - [ ] Profile-based configuration
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
 [license]: LICENSE
-[license-badge]: https://img.shields.io/badge/license-MIT-green
-[build-badge]: https://img.shields.io/github/actions/workflow/status/oktal/lens/build
-
+[license-badge]: https://img.shields.io/badge/license-MIT-green?style=for-the-badge
+[build-badge]: https://img.shields.io/github/actions/workflow/status/oktal/lens/build?style=for-the-badge
+[rust-badge]: https://img.shields.io/badge/rust-logo?style=for-the-badge&logo=rust&color=gray
+[svelte-badge]: https://img.shields.io/badge/svelte-logo?style=for-the-badge&logo=svelte&color=gray
