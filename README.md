@@ -33,10 +33,11 @@ Lens simplifies data analysis by allowing you to query, transform, and visualize
 - 📁 **Support for Multiple File Formats:** Query data stored in Parquet, CSV, and JSON files.
 - 🌥 **Cloud Integration:** Seamlessly connect to cloud storage services like AWS S3 or Google Cloud Storage to run SQL queries on remote datasets.
 - 💻 **Local Support:** Run SQL queries on files located on your local machine.
-- 🔎 **SQL Interface:** Use familiar SQL syntax to query and transform data.
+- 🖊 **SQL Interface:** Use familiar SQL syntax to query and transform data.
 - 📔 **Query History:** Save and replay previous SQL queries to streamline repetitive tasks.
 - 👁 **Data Visualization:** View query results in tabular format
-- ↬ **Export Results:** Easily export query results to CSV, JSON, or other formats.
+- 🔒 **Privacy:** No data is sent to any external service. Files are processed either locally or directly from your cloud provider.
+- 💾 **Export Results:** Easily export query results to CSV, JSON, or other formats.
 
 
 ## Installation
@@ -82,6 +83,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 [license]: LICENSE
 [license-badge]: https://img.shields.io/badge/license-MIT-green?style=for-the-badge
-[build-badge]: https://img.shields.io/github/actions/workflow/status/oktal/lens/build?style=for-the-badge
+[build-badge]: https://img.shields.io/github/actions/workflow/status/oktal/lens/build.yml?style=for-the-badge
 [rust-badge]: https://img.shields.io/badge/rust-logo?style=for-the-badge&logo=rust&color=gray
 [svelte-badge]: https://img.shields.io/badge/svelte-logo?style=for-the-badge&logo=svelte&color=gray
