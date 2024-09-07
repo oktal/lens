@@ -15,6 +15,8 @@
 
 <img alt="demo" align="center" src="./assets/demo.gif" /> <br />
 
+## 💡 About
+
 Powerful, lightweight application that provides an interactive interface to run SQL queries on structured files, including Parquet, CSV, and JSON formats.
 You can use Lens locally or directly access data stored in cloud services like Amazon AWS or Google GCP.
 Lens simplifies data analysis by allowing you to query, transform, and visualize data without complex setup or external databases.
@@ -29,10 +31,10 @@ Lens simplifies data analysis by allowing you to query, transform, and visualize
 
 ## Features
 - 📁 **Support for Multiple File Formats:** Query data stored in Parquet, CSV, and JSON files.
-- ☁ **Cloud Integration:** Seamlessly connect to cloud storage services like AWS S3 or Google Cloud Storage to run SQL queries on remote datasets.
+- 🌥 **Cloud Integration:** Seamlessly connect to cloud storage services like AWS S3 or Google Cloud Storage to run SQL queries on remote datasets.
 - 💻 **Local Support:** Run SQL queries on files located on your local machine.
 - 🔎 **SQL Interface:** Use familiar SQL syntax to query and transform data.
-- 📓 **Query History:** Save and replay previous SQL queries to streamline repetitive tasks.
+- 📔 **Query History:** Save and replay previous SQL queries to streamline repetitive tasks.
 - 👁 **Data Visualization:** View query results in tabular format
 - ↬ **Export Results:** Easily export query results to CSV, JSON, or other formats.
 
