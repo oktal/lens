@@ -2,19 +2,24 @@
 	import { Button } from '$lib/components/ui/button/index';
 	import { Label } from '$lib/components/ui/label';
 	import { Separator } from '$lib/components/ui/separator';
-	import { Textarea } from '$lib/components/ui/textarea';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Select from '$lib/components/ui/select';
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
+	import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api';
+	import monaco from '$lib/monaco';
+	import { LanguageIdEnum } from 'monaco-sql-languages';
+	import { vsPlusTheme } from 'monaco-sql-languages';
+	import { mode } from 'mode-watcher';
 
 	import ExportDialog from '$lib/components/dialog/ExportDialog.svelte';
 	import QueryResultsTable from './QueryResultsTable.svelte';
 	import { queryPaneGroup, type SplitDirection } from './QueryPaneGroup.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { mount } from 'svelte';
+	import { mount, onDestroy, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
+
 	import { client } from '$lib/lens/api';
-	import { ScrollArea } from '../ui/scroll-area';
 
 	interface Props {
 		direction?: SplitDirection;
@@ -26,6 +31,9 @@
 	let { direction, paneId, closable = false }: Props = $props();
 
 	let queryError: any | undefined = $state(undefined);
+
+	let editor: Monaco.editor.IStandaloneCodeEditor;
+	let editorContainer: HTMLElement;
 
 	const paneOverlayId = paneId + 1;
 
@@ -78,14 +86,67 @@
 			toast.error(`Failed to export data: ${e}`);
 		}
 	}
+
+	async function updateSQLDialect(dialect: string) {
+		if (typeof editor === 'undefined') return;
+
+		monaco.editor.setModelLanguage(editor.getModel()!, dialect);
+	}
+
+	onMount(async () => {
+		monaco.editor.defineTheme('sql-dark', vsPlusTheme.darkThemeData);
+		monaco.editor.defineTheme('sql-light', vsPlusTheme.lightThemeData);
+		monaco.editor.defineTheme('sql-hc', vsPlusTheme.hcBlackThemeData);
+		editor = monaco.editor.create(editorContainer, {
+			value: '',
+			language: LanguageIdEnum.MYSQL,
+			theme: 'sql-dark'
+		});
+
+		editor.onDidChangeModelContent(() => {
+			queryPaneGroup.panes[paneId].query = editor.getValue();
+		});
+	});
+
+	onDestroy(() => {
+		monaco.editor.getModels().forEach((model) => model.dispose());
+		editor?.dispose();
+	});
+
+	$effect(() => {
+		if (typeof $mode !== 'undefined') {
+			if ($mode === 'light') monaco.editor.setTheme('sql-light');
+			else if ($mode === 'dark') monaco.editor.setTheme('sql-hc');
+		}
+	});
 </script>
 
 <div class="flex h-full max-h-screen w-full flex-col gap-1 overflow-auto">
 	{@render topBar()}
 
 	<div class="m-4 flex flex-col gap-2">
-		<Label for="query" class="text-sm font-semibold">Query</Label>
-		<Textarea id="query" bind:value={queryPaneGroup.panes[paneId]!.query} />
+		<div class="flex items-center">
+			<Label for="query" class="text-sm font-semibold">Query</Label>
+
+			<div class="ml-auto w-32">
+				<Select.Root
+					selected={{ value: 'mysql', label: 'mysql' }}
+					onSelectedChange={(v) => v && updateSQLDialect(v.value)}
+				>
+					<Select.Trigger>
+						<Select.Value />
+					</Select.Trigger>
+					<Select.Content>
+						{#each Object.values(LanguageIdEnum) as lang}
+							<Select.Item value={lang}>
+								{lang}
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+			</div>
+		</div>
+		<div class="h-48 w-full" bind:this={editorContainer}></div>
 
 		{#if queryError}
 			<p class="text-red-600">{queryError}</p>
