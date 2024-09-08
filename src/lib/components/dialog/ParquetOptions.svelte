@@ -1,9 +1,14 @@
 <script lang="ts">
 	import { Label } from '$lib/components/ui/label/index';
 	import { Switch } from '$lib/components/ui/switch/index';
-	import type { ParquetConfig } from '$lib/lens/types';
 
-	let { config }: { config: ParquetConfig } = $props();
+	let enablePageIndex = $state(true);
+	let pushdownFilters = $state(true);
+	let pruning = $state(false);
+
+	export function getOptions(): Record<string, any> {
+		return { enablePageIndex, pushdownFilters, pruning };
+	}
 </script>
 
 <div class="grid items-center gap-2">
@@ -15,11 +20,7 @@
 				number of rows decoded.
 			</span>
 		</Label>
-		<Switch
-			id="enable-page-index"
-			checked={config.enablePageIndex}
-			aria-label="Enable Page Index"
-		/>
+		<Switch id="enable-page-index" checked={enablePageIndex} aria-label="Enable Page Index" />
 	</div>
 
 	<div class="flex items-center justify-between space-x-2">
@@ -30,7 +31,7 @@
 				(min/max values) stored in the parquet file
 			</span>
 		</Label>
-		<Switch id="pruning" checked={config.pruning} aria-label="Pruning" />
+		<Switch id="pruning" checked={pruning} aria-label="Pruning" />
 	</div>
 
 	<div class="flex items-center justify-between space-x-2">
@@ -41,6 +42,6 @@
 				rows decoded. This optimization is sometimes called "late materialization".
 			</span>
 		</Label>
-		<Switch id="pushdown-filters" checked={config.pushdownFilters} aria-label="Pushdown filters" />
+		<Switch id="pushdown-filters" checked={pushdownFilters} aria-label="Pushdown filters" />
 	</div>
 </div>

@@ -21,14 +21,7 @@
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
 	import { open as dialogOpen } from '@tauri-apps/api/dialog';
 
-	import type {
-		CsvConfig,
-		Database,
-		DatasourceConfig,
-		FileType,
-		JsonConfig,
-		ParquetConfig
-	} from '$lib/lens/types';
+	import type { Database, DatasourceConfig, FileType } from '$lib/lens/types';
 	import Icon from '@iconify/svelte';
 	import type { Component } from 'svelte';
 	import CsvOptions from './CsvOptions.svelte';
@@ -50,6 +43,7 @@
 	}
 
 	type DatasourceItem = { kind: 's3' | 'gcs' | 'file' | 'dir'; url: string };
+	type OptionsComponent = Component<{}, { getOptions: () => Record<string, any> }>;
 
 	let { databases, datasources }: Props = $props();
 
@@ -112,6 +106,7 @@
 	>([]);
 	let dataSource: DatasourceItem | undefined = $state();
 	let locationPath = $state('');
+	let optionsComponent = $state<OptionsComponent | undefined>(undefined);
 
 	let schemas = $derived(
 		databases
@@ -144,48 +139,12 @@
 		}
 	});
 
-	let csvConfig: CsvConfig = $state({
-		hasHeader: false,
-		delimiter: ','
-	});
-
-	let parquetConfig: ParquetConfig = $state({
-		enablePageIndex: true,
-		pruning: true,
-		pushdownFilters: false
-	});
-
-	let jsonConfig: JsonConfig = $state({
-		compression: 'uncompressed'
-	});
-
-	let fileTypeOpts: Record<
-		FileType,
-		{
-			config: Record<string, string | number | boolean> | {};
-			component?: Component<{ config: any }>;
-		}
-	> = {
-		csv: {
-			config: csvConfig,
-			component: CsvOptions
-		},
-		arrow: {
-			config: {},
-			component: undefined
-		},
-		parquet: {
-			config: parquetConfig,
-			component: ParquetOptions
-		},
-		avro: {
-			config: {},
-			component: undefined
-		},
-		json: {
-			config: jsonConfig,
-			component: JsonOptions
-		}
+	let fileTypeOpts: Record<FileType, OptionsComponent | undefined> = {
+		csv: CsvOptions,
+		arrow: undefined,
+		parquet: ParquetOptions,
+		avro: undefined,
+		json: JsonOptions
 	};
 
 	const dataTypes = ['Bool', 'Double', 'Int', 'Date', 'String'];
@@ -281,10 +240,16 @@
 	}
 
 	function closeDialog() {
+		const getOptions = (): Record<string, string> => {
+			if (typeof optionsComponent === 'undefined') return {};
+
+			return createOptions(optionsComponent.getOptions());
+		};
+
 		open = false;
 		if (accept_) {
-			const options = createOptions(fileTypeOpts[fileType].config);
 			const location = `${dataSource?.url}${getLocationPath()}`;
+			const options = getOptions();
 			accept_({ database, schema, name, fileType, partitions, options, location });
 		}
 	}
@@ -351,14 +316,12 @@
 				{/each}
 			</ToggleGroup.Root>
 
-			{#if fileTypeOpts[fileType].component}
-				{@const { config, component } = fileTypeOpts[fileType]}
-
+			{#if fileTypeOpts[fileType]}
 				<Label class="col-span-3">Options</Label>
 
 				<Card.Root class="col-span-3">
 					<div class="m-4">
-						<svelte:component this={component} {config} />
+						<svelte:component this={fileTypeOpts[fileType]} bind:this={optionsComponent} />
 					</div>
 				</Card.Root>
 			{/if}

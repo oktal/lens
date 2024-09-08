@@ -3,22 +3,21 @@
 	import { Switch } from '$lib/components/ui/switch/index';
 	import * as Select from '$lib/components/ui/select';
 
-	import type { JsonConfig } from '$lib/lens/types';
-
-	let { config }: { config: JsonConfig } = $props();
+	type CompressionType = 'gzip' | 'bzip2' | 'xz' | 'zstd';
 
 	let compressed = $state(false);
+	let compressionType = $state<CompressionType | 'uncompressed'>('uncompressed');
 
-	const compressions: Array<JsonConfig['compression']> = ['gzip', 'bzip2', 'xz', 'zstd'];
+	export function getOptions(): Record<string, any> {
+		return { compression: compressionType };
+	}
+
+	const compressions: Array<CompressionType> = ['gzip', 'bzip2', 'xz', 'zstd'];
 	const compressionItems = compressions.map((c) => {
 		return {
 			value: c,
 			label: c
 		};
-	});
-
-	$effect(() => {
-		if (!compressed) config.compression = 'uncompressed';
 	});
 </script>
 
@@ -33,7 +32,7 @@
 	{#if compressed}
 		<Select.Root
 			items={compressionItems}
-			onSelectedChange={(c) => (config.compression = c?.value ?? 'uncompressed')}
+			onSelectedChange={(c) => (compressionType = c?.value ?? 'uncompressed')}
 		>
 			<Select.Trigger>
 				<Select.Value />

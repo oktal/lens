@@ -6,21 +6,6 @@ export type AmazonS3Config = {
   region: string;
 };
 
-export type CsvConfig = {
-  hasHeader: boolean;
-  delimiter: string;
-}
-
-export type ParquetConfig = {
-  enablePageIndex: boolean;
-  pushdownFilters: boolean;
-  pruning: boolean;
-}
-
-export type JsonConfig = {
-  compression: 'gzip' | 'bzip2' | 'xz' | 'zstd' | 'uncompressed'
-}
-
 export type GoogleCloudStorageConfig = {
   serviceAccountPath: string;
   serviceAccountKey: string;

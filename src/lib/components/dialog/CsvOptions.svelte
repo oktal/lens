@@ -1,10 +1,17 @@
 <script lang="ts">
 	import { Label } from '$lib/components/ui/label/index';
 	import { Switch } from '$lib/components/ui/switch/index';
-	import type { CsvConfig } from '$lib/lens/types';
 	import Input from '$lib/components/ui/input/input.svelte';
 
-	let { config }: { config: CsvConfig } = $props();
+	export function getOptions(): Record<string, any> {
+		return {
+			hasHeader,
+			delimiter
+		};
+	}
+
+	let hasHeader = $state(true);
+	let delimiter = $state(',');
 </script>
 
 <div class="grid items-center gap-2">
@@ -15,11 +22,11 @@
 				Specifies whether there is a CSV header (i.e. the first line consists of is column names).
 			</span>
 		</Label>
-		<Switch id="has-header" checked={config.hasHeader} aria-label="Has header" />
+		<Switch id="has-header" checked={hasHeader} aria-label="Has header" />
 	</div>
 
 	<div class="flex items-center justify-between space-x-2">
 		<Label>Delimiter</Label>
-		<Input class="col-span-2" bind:value={config.delimiter} />
+		<Input class="col-span-2" bind:value={delimiter} />
 	</div>
 </div>

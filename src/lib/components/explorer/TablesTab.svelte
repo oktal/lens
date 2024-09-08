@@ -94,6 +94,15 @@
 
 		query += ` LOCATION '${table.location}'`;
 
+		const options = Object.keys(table.options).map((key: string) => {
+			const value = table.options[key];
+			return `'${key}' '${value}'`;
+		});
+
+		if (options.length > 0) {
+			query += ` OPTIONS (${options.join(', ')})`;
+		}
+
 		loadPromise = new Promise<void>(async (accept, _reject) => {
 			try {
 				await client.sql.run(query);
