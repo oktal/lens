@@ -80,7 +80,7 @@
 	}
 </script>
 
-<div class="relative flex h-full max-h-screen w-full flex-col gap-1">
+<div class="flex h-full max-h-screen w-full flex-col gap-1 overflow-auto">
 	{@render topBar()}
 
 	<div class="m-4 flex flex-col gap-2">
@@ -95,7 +95,7 @@
 	<Separator />
 
 	{#if queryPaneGroup.panes[paneId]?.stream}
-		<div class="m-4 h-full">
+		<div class="m-4">
 			<QueryResultsTable stream={queryPaneGroup.panes[paneId].stream} />
 		</div>
 	{/if}

@@ -93,28 +93,26 @@
 		<Progress value={undefined} />
 	{/if}
 
-	<ScrollArea orientation="both" class="h-screen max-h-[60vh] w-screen">
-		<Table.Root>
-			<Table.Header>
+	<Table.Root>
+		<Table.Header>
+			<Table.Row>
+				<Table.Head class="w-[50px]">#</Table.Head>
+				{#each stream.columns as column}
+					<Table.Head>{column}</Table.Head>
+				{/each}
+			</Table.Row>
+		</Table.Header>
+		<Table.Body>
+			{#each pagination.page as { index, row }}
 				<Table.Row>
-					<Table.Head class="w-[50px]">#</Table.Head>
-					{#each stream.columns as column}
-						<Table.Head>{column}</Table.Head>
+					<Table.Cell class="p-1 px-4 font-medium">{index}</Table.Cell>
+					{#each row as cell}
+						<Table.Cell class="p-1 px-4 font-medium">{cell}</Table.Cell>
 					{/each}
 				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each pagination.page as { index, row }}
-					<Table.Row>
-						<Table.Cell class="p-1 px-4 font-medium">{index}</Table.Cell>
-						{#each row as cell}
-							<Table.Cell class="p-1 px-4 font-medium">{cell}</Table.Cell>
-						{/each}
-					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
-	</ScrollArea>
+			{/each}
+		</Table.Body>
+	</Table.Root>
 {/snippet}
 
 {#snippet paginationControl()}
