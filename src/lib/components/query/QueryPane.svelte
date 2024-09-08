@@ -14,6 +14,7 @@
 	import { mount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { client } from '$lib/lens/api';
+	import { ScrollArea } from '../ui/scroll-area';
 
 	interface Props {
 		direction?: SplitDirection;
@@ -79,7 +80,7 @@
 	}
 </script>
 
-<div class="relative flex h-full w-full flex-col gap-1">
+<div class="relative flex h-full max-h-screen w-full flex-col gap-1">
 	{@render topBar()}
 
 	<div class="m-4 flex flex-col gap-2">
@@ -94,7 +95,7 @@
 	<Separator />
 
 	{#if queryPaneGroup.panes[paneId]?.stream}
-		<div class="m-4">
+		<div class="m-4 h-full">
 			<QueryResultsTable stream={queryPaneGroup.panes[paneId].stream} />
 		</div>
 	{/if}

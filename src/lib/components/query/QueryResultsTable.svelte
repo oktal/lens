@@ -9,118 +9,68 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 
 	import { type QueryStream } from '$lib/stores/QueryStream.svelte';
-	import QueryResultHeader from './QueryResultHeader.svelte';
 
 	import Icon from '@iconify/svelte';
-	import type {
-		ColumnDef,
-		PaginationState,
-		SortingState,
-		TableOptions,
-		Updater
-	} from '@tanstack/svelte-table';
-	import {
-		FlexRender,
-		createColumnHelper,
-		createTable,
-		getCoreRowModel,
-		getPaginationRowModel,
-		getSortedRowModel,
-		renderComponent
-	} from '@tanstack/svelte-table';
+	import { ScrollArea } from '../ui/scroll-area';
 
 	let { stream } = $props<{ stream: QueryStream }>();
 
-	const columnHelper = createColumnHelper<string[]>();
+	class Pagination {
+		pageIndex = $state(0);
+		pageSize = $state(10);
 
-	const columns: ColumnDef<string[], string>[] = $derived([
-		columnHelper.display({
-			id: 'rowIndex',
-			header: ({ header }) => renderComponent(QueryResultHeader, { label: '#', header }),
-			cell: (props) => props.row.index
-		}),
-		...stream.columns.map((column: string, idx: number) => {
-			return columnHelper.accessor((row: string[]) => row[idx], {
-				id: column,
-				header: ({ header }) => renderComponent(QueryResultHeader, { label: column, header })
-			});
-		})
-	]);
+		start = $derived(pagination.pageIndex * pagination.pageSize);
+		end = $derived(Math.min(this.start + pagination.pageSize, stream.rows.length));
+		lastPage = $derived(Math.max(Math.ceil(stream.rows.length / pagination.pageSize) - 1, 0));
+		page = $derived(
+			stream.rows.slice(this.start, this.end).map((row: string[], idx: number) => {
+				return {
+					index: idx + this.start,
+					row
+				};
+			})
+		);
 
-	let sorting = $state<SortingState>([]);
-	let pagination = $state<PaginationState>({
-		pageIndex: 0,
-		pageSize: 10
-	});
+		gotoPage(pageIndex: number) {
+			this.pageIndex = pageIndex;
+		}
 
-	let table = $derived(createResultsTable());
+		gotoNextPage() {
+			if (this.pageIndex < this.lastPage) this.gotoPage(this.pageIndex + 1);
+		}
 
-	let start = $derived(pagination.pageIndex * pagination.pageSize);
-	let end = $derived(Math.min(start + pagination.pageSize, stream.rows.length));
-	let lastPage = $derived(Math.max(Math.ceil(stream.rows.length / pagination.pageSize) - 1, 0));
+		gotoPreviousPage() {
+			if (this.pageIndex > 0) this.gotoPage(this.pageIndex - 1);
+		}
 
+		gotoFirstPage() {
+			this.gotoPage(0);
+		}
+
+		gotoLastPage() {
+			this.gotoPage(this.lastPage);
+		}
+
+		canGoToNextPage(): boolean {
+			return this.pageIndex < this.lastPage;
+		}
+
+		canGoToPreviousPage(): boolean {
+			return this.pageIndex > 0;
+		}
+
+		setPageSize(pageSize: number) {
+			this.pageSize = pageSize;
+		}
+	}
+
+	let pagination = new Pagination();
 	const rowsPerPageItems = [10, 25, 50, 100].map((x) => {
 		return {
 			label: `${x}`,
 			value: x
 		};
 	});
-
-	function setSorting(updater: Updater<SortingState>) {
-		if (updater instanceof Function) {
-			sorting = updater(sorting);
-		} else sorting = updater;
-	}
-
-	function setPagination(updater: Updater<PaginationState>) {
-		if (updater instanceof Function) {
-			pagination = updater(pagination);
-		} else pagination = updater;
-	}
-
-	function createResultsTable() {
-		const options: TableOptions<string[]> = {
-			get data() {
-				return stream.rows;
-			},
-			columns,
-			state: {
-				get sorting() {
-					return sorting;
-				},
-				get pagination() {
-					return pagination;
-				}
-			},
-			onSortingChange: setSorting,
-			onPaginationChange: setPagination,
-			getCoreRowModel: getCoreRowModel(),
-			getSortedRowModel: getSortedRowModel(),
-			getPaginationRowModel: getPaginationRowModel()
-		};
-
-		return createTable(options);
-	}
-
-	function getRowsTextValues(): string[] {
-		const formatValue = (val: string): string => {
-			if (val.includes(' ') || val.includes(',')) return `"${val}"`;
-
-			return val;
-		};
-
-		const tableColumns = table.getAllColumns();
-		const rows = table.getRowModel().rows;
-		const values = rows.map((r) =>
-			tableColumns
-				.filter((c) => c.id !== 'rowIndex')
-				.map((c) => r.getValue<string>(c.id))
-				.map((v) => formatValue(v))
-				.join(',')
-		);
-
-		return values;
-	}
 </script>
 
 <Tabs.Root value="table">
@@ -143,35 +93,28 @@
 		<Progress value={undefined} />
 	{/if}
 
-	<Table.Root>
-		<Table.Header>
-			{#each table.getHeaderGroups() as headerGroup}
+	<ScrollArea orientation="both" class="h-screen max-h-[60vh] w-screen">
+		<Table.Root>
+			<Table.Header>
 				<Table.Row>
-					{#each headerGroup.headers as header}
-						<Table.Head>
-							{#if !header.isPlaceholder}
-								<FlexRender
-									content={header.column.columnDef.header}
-									context={header.getContext()}
-								/>
-							{/if}
-						</Table.Head>
+					<Table.Head class="w-[50px]">#</Table.Head>
+					{#each stream.columns as column}
+						<Table.Head>{column}</Table.Head>
 					{/each}
 				</Table.Row>
-			{/each}
-		</Table.Header>
-		<Table.Body>
-			{#each table.getRowModel().rows as row}
-				<Table.Row>
-					{#each row.getVisibleCells() as cell}
-						<Table.Cell class="p-1 px-8 font-medium">
-							<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
-						</Table.Cell>
-					{/each}
-				</Table.Row>
-			{/each}
-		</Table.Body>
-	</Table.Root>
+			</Table.Header>
+			<Table.Body>
+				{#each pagination.page as { index, row }}
+					<Table.Row>
+						<Table.Cell class="p-1 px-4 font-medium">{index}</Table.Cell>
+						{#each row as cell}
+							<Table.Cell class="p-1 px-4 font-medium">{cell}</Table.Cell>
+						{/each}
+					</Table.Row>
+				{/each}
+			</Table.Body>
+		</Table.Root>
+	</ScrollArea>
 {/snippet}
 
 {#snippet paginationControl()}
@@ -180,7 +123,7 @@
 		<Select.Root
 			items={rowsPerPageItems}
 			selected={rowsPerPageItems[0]}
-			onSelectedChange={(v) => v && table.setPageSize(v.value)}
+			onSelectedChange={(v) => v && pagination.setPageSize(v.value)}
 		>
 			<Select.Trigger class="w-[80px]">
 				<Select.Value />
@@ -195,32 +138,33 @@
 		</Select.Root>
 
 		<Label
-			>Page {pagination.pageIndex + 1} of {lastPage} ({start}-{end} of {stream.rows.length} rows)</Label
+			>Page {pagination.pageIndex + 1} of {pagination.lastPage} ({pagination.start}-{pagination.end}
+			of {stream.rows.length} rows)</Label
 		>
 
 		{@render paginationItem({
 			icon: 'material-symbols:first-page',
 			tooltip: 'First page',
-			disabled: !table.getCanPreviousPage(),
-			action: () => table.firstPage()
+			disabled: !pagination.canGoToPreviousPage(),
+			action: () => pagination.gotoFirstPage()
 		})}
 		{@render paginationItem({
 			icon: 'material-symbols:chevron-left',
 			tooltip: 'Previous page',
-			disabled: !table.getCanPreviousPage(),
-			action: () => table.previousPage()
+			disabled: !pagination.canGoToPreviousPage(),
+			action: () => pagination.gotoPreviousPage()
 		})}
 		{@render paginationItem({
 			icon: 'material-symbols:chevron-right',
 			tooltip: 'Next page',
-			disabled: !table.getCanNextPage(),
-			action: () => table.nextPage()
+			disabled: !pagination.canGoToNextPage(),
+			action: () => pagination.gotoNextPage()
 		})}
 		{@render paginationItem({
 			icon: 'material-symbols:last-page',
 			tooltip: 'Last page',
-			disabled: !table.getCanNextPage(),
-			action: () => table.lastPage()
+			disabled: !pagination.canGoToNextPage(),
+			action: () => pagination.gotoLastPage()
 		})}
 	</div>
 {/snippet}
@@ -251,5 +195,13 @@
 {#snippet rawText()}
 	{stream.columns}
 
-	<Textarea readonly class="h-full" value={getRowsTextValues().join('\n')} />
+	<Textarea
+		readonly
+		class="h-full"
+		value={pagination.page
+			.map((page: any) => {
+				return page.row;
+			})
+			.join('\n')}
+	/>
 {/snippet}
