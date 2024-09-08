@@ -11,7 +11,6 @@
 	import { type QueryStream } from '$lib/stores/QueryStream.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { ScrollArea } from '../ui/scroll-area';
 
 	let { stream } = $props<{ stream: QueryStream }>();
 
@@ -136,7 +135,7 @@
 		</Select.Root>
 
 		<Label
-			>Page {pagination.pageIndex + 1} of {pagination.lastPage} ({pagination.start}-{pagination.end}
+			>Page {pagination.pageIndex + 1} of {pagination.lastPage + 1} ({pagination.start}-{pagination.end}
 			of {stream.rows.length} rows)</Label
 		>
 
