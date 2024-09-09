@@ -2,9 +2,10 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::Context;
 use datafusion::{
+    common::{DataFusionError, sql_datafusion_err},
     logical_expr::{DdlStatement, LogicalPlan},
     prelude::*,
-    sql::{parser::Statement, TableReference},
+    sql::{parser::Statement, sqlparser::parser::ParserError, TableReference},
 };
 use object_store::{aws::AmazonS3Builder, ObjectStore};
 use tokio::sync::mpsc;
@@ -43,6 +44,35 @@ impl serde::Serialize for LensError {
     }
 }
 
+fn unescape(input: &str) -> datafusion::error::Result<String> {
+    let mut chars = input.chars();
+
+    let mut result = String::with_capacity(input.len());
+    while let Some(char) = chars.next() {
+        if char == '\\' {
+            if let Some(next_char) = chars.next() {
+                // https://static.rust-lang.org/doc/master/reference.html#literals
+                result.push(match next_char {
+                    '0' => '\0',
+                    'n' => '\n',
+                    'r' => '\r',
+                    't' => '\t',
+                    '\\' => '\\',
+                    _ => {
+                        return Err(sql_datafusion_err!(ParserError::TokenizerError(
+                            format!("unsupported escape char: '\\{}'", next_char)
+                        )))
+                    }
+                });
+            }
+        } else {
+            result.push(char);
+        }
+    }
+
+    Ok(result)
+}
+
 impl Lens {
     pub fn new() -> (Self, QueryStreamer) {
         // Setup session
@@ -74,9 +104,11 @@ impl Lens {
     }
 
     pub async fn sql(&self, query: &str) -> LensResult<DataFrame> {
+        let query = unescape(query)?;
+
         Ok(self
             .ctx
-            .execute_logical_plan(self.create_logical_plan(query).await?)
+            .execute_logical_plan(self.create_logical_plan(&query).await?)
             .await?)
     }
 
