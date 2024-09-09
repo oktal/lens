@@ -141,7 +141,7 @@
 
 {#snippet topBar()}
 	{@const queryStream = queryPaneGroup.panes[paneId]?.stream}
-	<div class="flex h-14 flex-row items-center gap-1 border">
+	<div class="flex h-10 flex-row items-center gap-1 border">
 		<div class="ml-2">
 			{@render topBarItem({
 				icon: 'carbon:play',
