@@ -89,11 +89,9 @@ export class QueryPaneGroup {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
 
-    const query = this.panes[paneId]?.query;
-    if (!query)
-      throw new Error(`query is undefined`);
-
+    const query = this.panes[paneId].query;
     const stream = await queriesStore.run(query);
+
     this.panes[paneId] = {
       query,
       stream
