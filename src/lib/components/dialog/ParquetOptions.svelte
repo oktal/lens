@@ -20,7 +20,7 @@
 				number of rows decoded.
 			</span>
 		</Label>
-		<Switch id="enable-page-index" checked={enablePageIndex} aria-label="Enable Page Index" />
+		<Switch id="enable-page-index" bind:checked={enablePageIndex} aria-label="Enable Page Index" />
 	</div>
 
 	<div class="flex items-center justify-between space-x-2">
@@ -31,7 +31,7 @@
 				(min/max values) stored in the parquet file
 			</span>
 		</Label>
-		<Switch id="pruning" checked={pruning} aria-label="Pruning" />
+		<Switch id="pruning" bind:checked={pruning} aria-label="Pruning" />
 	</div>
 
 	<div class="flex items-center justify-between space-x-2">
@@ -42,6 +42,6 @@
 				rows decoded. This optimization is sometimes called "late materialization".
 			</span>
 		</Label>
-		<Switch id="pushdown-filters" checked={pushdownFilters} aria-label="Pushdown filters" />
+		<Switch id="pushdown-filters" bind:checked={pushdownFilters} aria-label="Pushdown filters" />
 	</div>
 </div>

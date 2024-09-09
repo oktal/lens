@@ -25,7 +25,7 @@
 				Specifies whether there is a CSV header (i.e. the first line consists of is column names).
 			</span>
 		</Label>
-		<Switch id="has-header" checked={hasHeader} aria-label="Has header" />
+		<Switch id="has-header" bind:checked={hasHeader} aria-label="Has header" />
 	</div>
 
 	<div class="flex items-center justify-between space-x-2">
@@ -40,6 +40,6 @@
 				Specifies whether values can be multiline
 			</span>
 		</Label>
-		<Switch id="multilines" checked={multiLines} aria-label="Multi lines in values" />
+		<Switch id="multilines" bind:checked={multiLines} aria-label="Multi lines in values" />
 	</div>
 </div>
