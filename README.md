@@ -70,7 +70,7 @@ npm run tauri dev
 
 ## Roadmap
  - [ ] Monaco-based SQL editor
-   - [ ] Syntax highlighting
+   - [x] Syntax highlighting
    - [ ] Auto completion
 - [ ] Charts 
 - [ ] Configuration options
