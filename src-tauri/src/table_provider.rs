@@ -2,16 +2,14 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use datafusion::arrow::datatypes::DataType;
+use datafusion::catalog::{Session, TableProviderFactory};
 use datafusion::common::config_datafusion_err;
 use datafusion::datasource::listing::{
     ListingOptions, ListingTable, ListingTableConfig, ListingTableUrl,
 };
 use datafusion::error::Result;
 use datafusion::execution::context::SessionState;
-use datafusion::{
-    datasource::{provider::TableProviderFactory, TableProvider},
-    logical_expr::CreateExternalTable,
-};
+use datafusion::{datasource::TableProvider, logical_expr::CreateExternalTable};
 
 struct LensTableProvider;
 
@@ -19,10 +17,14 @@ struct LensTableProvider;
 impl TableProviderFactory for LensTableProvider {
     async fn create(
         &self,
-        state: &SessionState,
+        session: &dyn Session,
         cmd: &CreateExternalTable,
     ) -> Result<Arc<dyn TableProvider>> {
         // Retrieve file format for the type of table to create
+        let state = session
+            .as_any()
+            .downcast_ref::<SessionState>()
+            .expect("`Session` should be a `SessionState`");
         let file_format = state
             .get_file_format_factory(cmd.file_type.as_str())
             .ok_or(config_datafusion_err!(

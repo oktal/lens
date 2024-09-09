@@ -36,6 +36,7 @@ struct JsonArrayFormat {
     inner: JsonFormat,
 }
 
+#[derive(Debug)]
 struct JsonArrayFormatFactory;
 
 impl JsonArrayFormat {
@@ -53,6 +54,10 @@ impl GetExt for JsonArrayFormatFactory {
 }
 
 impl FileFormatFactory for JsonArrayFormatFactory {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn create(
         &self,
         _state: &SessionState,

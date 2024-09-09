@@ -20,6 +20,7 @@ use datafusion::{
     },
     prelude::Expr,
 };
+use datafusion_catalog::Session;
 
 #[derive(Debug)]
 struct Shared {
@@ -86,7 +87,7 @@ impl TableProvider for MemTable {
 
     async fn scan(
         &self,
-        _state: &SessionState,
+        _state: &dyn Session,
         projection: Option<&Vec<usize>>,
         _filters: &[Expr],
         _limit: Option<usize>,
