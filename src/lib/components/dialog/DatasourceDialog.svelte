@@ -3,7 +3,7 @@
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
 	import * as Card from '$lib/components/ui/card';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import type { AmazonS3Config, GoogleCloudStorageConfig, DatasourceConfig } from '$lib/lens/types';
+	import type { DatasourceConfig } from '$lib/lens/types';
 	import { Button } from '../ui/button';
 	import Icon from '@iconify/svelte';
 	import { Input } from '../ui/input';
@@ -26,14 +26,24 @@
 		icon: string;
 		get url(): string;
 		set url(value: string);
-		options?: OptionsComponent
+		options?: OptionsComponent;
 	};
 
 	let options = $state<OptionsComponent | undefined>(undefined);
 
 	let datasources: Record<DataSource, DatasourceItem> = {
-		s3: useDatasource({ label: 'Amazon S3', icon: 'mdi:aws', defaultUrl: 's3://', options: AmazonS3Options}),
-		gcs: useDatasource({label: 'Google Cloud Storage', icon: 'mdi:google', defaultUrl: 'gcp://', options: undefined}),
+		s3: useDatasource({
+			label: 'Amazon S3',
+			icon: 'mdi:aws',
+			defaultUrl: 's3://',
+			options: AmazonS3Options
+		}),
+		gcs: useDatasource({
+			label: 'Google Cloud Storage',
+			icon: 'mdi:google',
+			defaultUrl: 'gcp://',
+			options: undefined
+		})
 	};
 
 	let open = $state(false);
@@ -42,16 +52,30 @@
 	let accept_: (config: DatasourceConfig) => void;
 	let reject_: () => void;
 
-	function useDatasource({label, icon, defaultUrl, options}: {label: string, icon: string, defaultUrl: string, options?: OptionsComponent}): DatasourceItem {
+	function useDatasource({
+		label,
+		icon,
+		defaultUrl,
+		options
+	}: {
+		label: string;
+		icon: string;
+		defaultUrl: string;
+		options?: OptionsComponent;
+	}): DatasourceItem {
 		let url = $state(defaultUrl);
 
 		return {
 			label,
 			icon,
-			get url() { return url },
-			set url(value: string) { url = value },
+			get url() {
+				return url;
+			},
+			set url(value: string) {
+				url = value;
+			},
 			options
-		}
+		};
 	}
 
 	function closeDialog() {
