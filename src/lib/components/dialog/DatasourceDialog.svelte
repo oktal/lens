@@ -78,7 +78,7 @@
 	<Dialog.Content class="sm:max-w-[425px]">
 		<Dialog.Header>
 			<Dialog.Title>Create data source</Dialog.Title>
-			<Dialog.Description>Instruct datalens where to find your data</Dialog.Description>
+			<Dialog.Description>Instruct lens where to find your data</Dialog.Description>
 		</Dialog.Header>
 		<div class="flex flex-col gap-2">
 			<Label>Type</Label>

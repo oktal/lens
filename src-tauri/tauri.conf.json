@@ -6,7 +6,7 @@
     "distDir": "../build"
   },
   "package": {
-    "productName": "datalens",
+    "productName": "lens",
     "version": "0.1.0"
   },
   "tauri": {

@@ -50,7 +50,7 @@ async fn get_access_token(config: &SdkConfig, start_url: String) -> anyhow::Resu
 
     let client_credentials = client
         .register_client()
-        .client_name("datalens")
+        .client_name("lens")
         .client_type("public")
         .send()
         .await
