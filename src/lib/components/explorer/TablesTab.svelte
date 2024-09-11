@@ -1,13 +1,13 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { Spinner } from '$lib/components/ui/spinner';
 
 	import Icon from '@iconify/svelte';
 	import { client } from '$lib/lens/api';
 	import { FileTypes, type Database, type FileType } from '$lib/lens/types';
 
 	import DatabaseDialog from '$lib/components/dialog/DatabaseDialog.svelte';
+	import { Progress } from '$lib/components/ui/progress';
 	import SchemaDialog from '$lib/components/dialog/SchemaDialog.svelte';
 	import TableDialog, { type TableInfo } from '$lib/components/dialog/TableDialog.svelte';
 	import EntityTree, { type FileDropEvent } from './EntityTree.svelte';
@@ -193,17 +193,13 @@
 </script>
 
 <div class="flex flex-col gap-1">
-	{#await loadPromise}
-		<div class="flex flex-row items-center gap-1">
-			<span>Refreshing...</span>
-			<Spinner />
-		</div>
-	{/await}
-
 	<div class="place-self-end px-2 py-2">
 		{@render addMenu(addMenuItems)}
 	</div>
 
+	{#await loadPromise}
+		<Progress value={undefined} />
+	{/await}
 	<EntityTree {databases} onFileDropped={handleFileDropped} />
 </div>
 
