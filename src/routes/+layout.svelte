@@ -3,6 +3,9 @@
 	import '../app.css';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { ModeWatcher } from 'mode-watcher';
+	import { startListeningForDragAndDropEvents } from '$lib/dropevent';
+
+	startListeningForDragAndDropEvents();
 </script>
 
 <Toaster />

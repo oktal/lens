@@ -32,6 +32,8 @@
 	interface Props {
 		databases: Database[];
 		datasources: DatasourceConfig[];
+
+		info?: Partial<TableInfo>;
 	}
 
 	export function show(): Promise<TableInfo> {
@@ -45,7 +47,7 @@
 	type DatasourceItem = { kind: 's3' | 'gcs' | 'file' | 'dir'; url: string };
 	type OptionsComponent = Component<{}, { getOptions: () => Record<string, any> }>;
 
-	let { databases, datasources }: Props = $props();
+	let { databases, datasources, info }: Props = $props();
 
 	const databaseItems = databases.map((db: Database) => {
 		return {
@@ -92,10 +94,10 @@
 		dir: 'mdi:folder'
 	};
 
-	let database = $state('');
-	let schema = $state('');
-	let name = $state('');
-	let fileType: FileType = $state('csv');
+	let database = $state(info?.database ?? '');
+	let schema = $state(info?.schema ?? '');
+	let name = $state(info?.name ?? '');
+	let fileType: FileType = $state(info?.fileType ?? 'csv');
 	let partitions = $state<
 		{
 			get name(): string;
@@ -104,8 +106,8 @@
 			set type(val: string);
 		}[]
 	>([]);
-	let dataSource: DatasourceItem | undefined = $state();
-	let locationPath = $state('');
+	let dataSource: DatasourceItem = $state({ kind: 'file', url: 'file://' });
+	let locationPath = $state(info?.location ?? '');
 	let optionsComponent = $state<OptionsComponent | undefined>(undefined);
 
 	let schemas = $derived(
@@ -125,18 +127,14 @@
 	let open = $state(false);
 
 	let browsable = $derived.by(() => {
-		if (typeof dataSource !== 'undefined') {
-			const browsable = dataSource.kind == 'file' || dataSource.kind == 'dir';
+		const browsable = dataSource.kind == 'file' || dataSource.kind == 'dir';
 
-			if (browsable) {
-				const dir = dataSource.kind == 'dir';
-				return { dir };
-			}
-
-			return undefined;
-		} else {
-			return undefined;
+		if (browsable) {
+			const dir = dataSource.kind == 'dir';
+			return { dir };
 		}
+
+		return undefined;
 	});
 
 	let fileTypeOpts: Record<FileType, OptionsComponent | undefined> = {
@@ -271,7 +269,11 @@
 		<div class="flex flex-col gap-4 py-4">
 			<Grid rows={3} cols={['1fr', '2fr']} class="items-center gap-2">
 				<Label>Database</Label>
-				<Select.Root items={databaseItems} onSelectedChange={(v) => v && (database = v.value)}>
+				<Select.Root
+					selected={{ label: database, value: database }}
+					items={databaseItems}
+					onSelectedChange={(v) => v && (database = v.value)}
+				>
 					<Select.Trigger>
 						<Select.Value />
 					</Select.Trigger>
@@ -285,7 +287,11 @@
 				</Select.Root>
 
 				<Label>Schema</Label>
-				<Select.Root items={schemaItems} onSelectedChange={(v) => v && (schema = v.value)}>
+				<Select.Root
+					selected={{ label: schema, value: schema }}
+					items={schemaItems}
+					onSelectedChange={(v) => v && (schema = v.value)}
+				>
 					<Select.Trigger>
 						<Select.Value />
 					</Select.Trigger>
@@ -362,7 +368,11 @@
 			<Label>Location</Label>
 			<div class="flex flex-row gap-1">
 				<div class="w-32">
-					<Select.Root items={datasourceItems} onSelectedChange={(s) => (dataSource = s?.value)}>
+					<Select.Root
+						selected={{ value: 'file', label: 'file://' }}
+						items={datasourceItems}
+						onSelectedChange={(s) => (dataSource = s?.value)}
+					>
 						<Select.Trigger>
 							<Select.Value />
 						</Select.Trigger>

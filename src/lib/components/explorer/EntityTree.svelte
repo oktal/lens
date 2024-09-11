@@ -1,3 +1,17 @@
+<script lang="ts" context="module">
+	export type FileDropProperties =
+		| {
+				level: 'database';
+				database: string;
+		  }
+		| { level: 'schema'; database: string; schema: string };
+
+	export type FileDropEvent = {
+		filePath: string;
+		detail: FileDropProperties;
+	};
+</script>
+
 <script lang="ts">
 	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -5,8 +19,13 @@
 
 	import type { Database, LogicalDataType } from '$lib/lens/types';
 	import { SvelteMap } from 'svelte/reactivity';
+	import type { DropEvent } from '$lib/dropevent';
+	import { mode } from 'mode-watcher';
 
-	let { databases }: { databases: Database[] } = $props();
+	let {
+		databases,
+		onFileDropped = undefined
+	}: { databases: Database[]; onFileDropped?: (ev: FileDropEvent) => void } = $props();
 
 	const logicalTypeIcons: Record<LogicalDataType, string> = {
 		string: 'carbon:string-text',
@@ -28,6 +47,8 @@
 		}
 	>();
 
+	let dragHoverClass = $derived($mode === 'light' ? 'draghover' : 'draghover-dark');
+
 	function toggleExpanded({ id }: { id: string }) {
 		if (!expandMap.has(id)) {
 			let expanded = $state(true);
@@ -44,24 +65,92 @@
 			state.expanded = !state.expanded;
 		}
 	}
+
+	function handleDragEnter(ev: DragEvent) {
+		ev.preventDefault();
+
+		if (ev.target instanceof Element) {
+			ev.target.classList.add(dragHoverClass);
+		}
+	}
+
+	function handleDragLeave(ev: DragEvent) {
+		ev.preventDefault();
+
+		if (ev.target instanceof Element) {
+			ev.target.classList.remove(dragHoverClass);
+		}
+	}
+
+	function handleDropEvent(ev: DropEvent, properties: FileDropProperties) {
+		ev.preventDefault();
+		if (!ev.dataTransfer) return;
+
+		if (ev.dataTransfer.items) {
+			const item = ev.dataTransfer.items[0];
+
+			if (item.kind === 'file') {
+				const file = item.getAsFile();
+				if (file) {
+					if (onFileDropped) {
+						onFileDropped({
+							filePath: file.name,
+							detail: properties
+						});
+					}
+				}
+			} else if (item.kind === 'string') {
+				item.getAsString((file: string) => {
+					if (onFileDropped) {
+						onFileDropped({
+							filePath: file,
+							detail: properties
+						});
+					}
+				});
+			}
+		}
+	}
 </script>
 
 <Collapsible.Root>
-	{#each databases as { name, schemas }}
-		{@render trigger({ id: `database-${name}`, icon: 'carbon:db2-database', label: name })}
+	{#each databases as { name: databaseName, schemas }}
+		{@render trigger({
+			id: `database-${databaseName}`,
+			icon: 'carbon:db2-database',
+			label: databaseName,
+			dropProperties: {
+				level: 'database',
+				database: databaseName
+			}
+		})}
 
 		<Collapsible.Content>
-			{#each schemas as { name, tables }}
+			{#each schemas as { name: schemaName, tables }}
 				<Collapsible.Root class="w-full pl-5">
 					{@render trigger({
 						id: `schema-${name}`,
 						icon: 'material-symbols-light:schema-outline',
-						label: name
+						label: schemaName,
+						dropProperties: {
+							level: 'schema',
+							database: databaseName,
+							schema: schemaName
+						}
 					})}
 					<Collapsible.Content>
 						{#each tables as { name, schema: { fields } }}
 							<Collapsible.Root class="w-full pl-5">
-								{@render trigger({ id: `table-${name}`, icon: 'carbon:data-table', label: name })}
+								{@render trigger({
+									id: `table-${name}`,
+									icon: 'carbon:data-table',
+									label: name,
+									dropProperties: {
+										level: 'schema',
+										database: databaseName,
+										schema: schemaName
+									}
+								})}
 
 								<Collapsible.Content>
 									<div class="pl-5">
@@ -89,13 +178,26 @@
 	{/each}
 </Collapsible.Root>
 
-{#snippet trigger({ id, icon, label }: { id: string; icon: string; label: string })}
+{#snippet trigger({
+	id,
+	icon,
+	label,
+	dropProperties
+}: {
+	id: string;
+	icon: string;
+	label: string;
+	dropProperties: FileDropProperties;
+})}
 	<Collapsible.Trigger asChild let:builder>
 		<Button
 			builders={[builder]}
 			variant="ghost"
 			class="flex w-full justify-start gap-1"
 			on:click={() => toggleExpanded({ id })}
+			ondrop={(e: DropEvent) => handleDropEvent(e, dropProperties)}
+			ondragenter={handleDragEnter}
+			ondragleave={handleDragLeave}
 		>
 			{@const state = expandMap.get(id)?.expanded ? 'expanded' : 'collapsed'}
 			{@render carret({ state })}

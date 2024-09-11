@@ -36,8 +36,6 @@ export class QueryPaneGroup {
     if (this.panes.length == 1) {
       this.panes.push(usePane(undefined))
     }
-
-    console.log(this.panes);
   }
 
   close(paneId: number) {

@@ -193,7 +193,8 @@ export type LogicalDataType = Extract<DataType, { logical: string }>["logical"];
 
 export type TimeZone = string | undefined;
 
-export type FileType = "csv" | "arrow" | "parquet" | "avro" | "json";
+export const FileTypes = ['csv', 'arrow', 'parquet', 'avro', 'json']
+export type FileType = typeof FileTypes[number];
 export type TimeUnit = "Second" | "Millisecond" | "Microsecond" | "Nanosecond";
 
 export type StreamId = string;

@@ -5,12 +5,12 @@
 
 	import Icon from '@iconify/svelte';
 	import { client } from '$lib/lens/api';
-	import type { Database } from '$lib/lens/types';
+	import { FileTypes, type Database, type FileType } from '$lib/lens/types';
 
 	import DatabaseDialog from '$lib/components/dialog/DatabaseDialog.svelte';
 	import SchemaDialog from '$lib/components/dialog/SchemaDialog.svelte';
-	import TableDialog from '$lib/components/dialog/TableDialog.svelte';
-	import EntityTree from './EntityTree.svelte';
+	import TableDialog, { type TableInfo } from '$lib/components/dialog/TableDialog.svelte';
+	import EntityTree, { type FileDropEvent } from './EntityTree.svelte';
 
 	import { toast } from 'svelte-sonner';
 	import { mount } from 'svelte';
@@ -59,14 +59,15 @@
 		databases = await client.list.databases();
 	}
 
-	async function createTable() {
+	async function createTable(info?: Partial<TableInfo>) {
 		const datasources = await client.list.datasources();
 
 		const dialog = mount(TableDialog, {
 			target: document.body,
 			props: {
 				databases,
-				datasources
+				datasources,
+				info
 			}
 		});
 
@@ -116,6 +117,52 @@
 		});
 	}
 
+	async function handleFileDropped(ev: FileDropEvent) {
+		const parseFilePath = (filePath: string): { baseName: string; extension: string } => {
+			const pathSeparator = filePath.includes('\\') ? '\\' : '/';
+			const fileNameWithExtension = filePath.split(pathSeparator).pop() || '';
+
+			const lastDotIndex = fileNameWithExtension.lastIndexOf('.');
+			if (lastDotIndex === -1) {
+				return { baseName: fileNameWithExtension, extension: '' };
+			}
+
+			const baseName = fileNameWithExtension.slice(0, lastDotIndex);
+			const extension = fileNameWithExtension.slice(lastDotIndex);
+
+			return { baseName, extension };
+		};
+
+		const getTableBaseInfo = (): Partial<TableInfo> => {
+			const detail = ev.detail;
+			if (detail.level === 'database') {
+				const { database } = detail;
+				return { database };
+			} else if (detail.level === 'schema') {
+				const { database, schema } = detail;
+				return { database, schema };
+			}
+
+			return {};
+		};
+
+		const isKnownFileType = (extension: string): extension is FileType => {
+			return FileTypes.includes(extension);
+		};
+
+		const { baseName, extension } = parseFilePath(ev.filePath);
+		const fileType = extension.slice(1);
+
+		const tableInfo = {
+			...getTableBaseInfo(),
+			name: baseName,
+			location: ev.filePath,
+			fileType: isKnownFileType(fileType) ? fileType : undefined
+		};
+
+		await createTable(tableInfo);
+	}
+
 	type MenuItem = {
 		label: string;
 		icon: string;
@@ -136,7 +183,7 @@
 		{
 			label: 'Table',
 			icon: 'carbon:data-table',
-			onClick: createTable
+			onClick: () => createTable(undefined)
 		}
 	];
 
@@ -157,7 +204,7 @@
 		{@render addMenu(addMenuItems)}
 	</div>
 
-	<EntityTree {databases} />
+	<EntityTree {databases} onFileDropped={handleFileDropped} />
 </div>
 
 {#snippet addMenu(items: MenuItem[])}
