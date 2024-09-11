@@ -47,5 +47,7 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Increase node heap size on macos to avoid hitting oom when building with vite
+          NODE_OPTIONS: ${{ matrix.platform == 'macos-latest' && '--max-old-space-size=16384' || '' }}
         with:
           args: ${{ matrix.args }}
