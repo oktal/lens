@@ -10,8 +10,11 @@
 
 	import ExportDialog from '$lib/components/dialog/ExportDialog.svelte';
 	import QueryResultsTable from './QueryResultsTable.svelte';
-	import { queryPaneGroup, type SplitDirection } from './QueryPaneGroup.svelte';
-	import { DEFAULT_QUERY_TITLE } from './QueryPane.svelte';
+	import {
+		DEFAULT_QUERY_TITLE,
+		queryPaneGroup,
+		type SplitDirection
+	} from './QueryPaneGroup.svelte';
 
 	import Icon from '@iconify/svelte';
 	import { mount } from 'svelte';
