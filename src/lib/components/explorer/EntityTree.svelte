@@ -49,7 +49,7 @@
 
 	let dragHoverClass = $derived($mode === 'light' ? 'draghover' : 'draghover-dark');
 
-	function toggleExpanded({ id }: { id: string }) {
+	function toggleExpanded(id: string) {
 		if (!expandMap.has(id)) {
 			let expanded = $state(true);
 			expandMap.set(id, {
@@ -194,7 +194,7 @@
 			builders={[builder]}
 			variant="ghost"
 			class="flex w-full justify-start gap-1"
-			on:click={() => toggleExpanded({ id })}
+			on:click={() => toggleExpanded(id)}
 			ondrop={(e: DropEvent) => handleDropEvent(e, dropProperties)}
 			ondragenter={handleDragEnter}
 			ondragleave={handleDragLeave}

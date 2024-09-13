@@ -1,30 +1,52 @@
 import type { StreamId } from "$lib/lens/types";
-import { queriesStore } from "$lib/stores/queries.svelte";
+import { queriesStore, type QueryStoreEntry } from "$lib/stores/queries.svelte";
 import type { QueryStream } from "$lib/stores/QueryStream.svelte";
 
 export type SplitDirection = 'vertical' | 'horizontal';
+export const DEFAULT_QUERY_TITLE: string = 'Unnamed';
 
-type PaneInfo = {
-  get query(): string,
-  set query(val: string),
+class QueryPane {
+  query = $state('');
+  title = $state('');
+  stream = $state<QueryStream | undefined>(undefined);
 
-  stream?: QueryStream,
-};
+  streamId?: StreamId;
 
-function usePane(queryString?: string): PaneInfo {
-  let query = $state(queryString ?? '');
+  constructor(queryString?: string, title: string = DEFAULT_QUERY_TITLE) {
+    this.query = queryString ?? '';
+    this.title = title;
+  }
 
-  return {
-    get query(): string { return query },
-    set query(val: string) { query = val },
+  clear() {
+    this.query = '';
+    this.title = DEFAULT_QUERY_TITLE;
 
-    stream: undefined,
-  };
+    this.streamId = undefined;
+    this.stream = undefined;
+  }
+
+  renew(entry: QueryStoreEntry) {
+    const { title, stream } = entry;
+
+    this.title = title;
+
+    if (stream.kind === 'partial') {
+      this.query = stream.query;
+      this.streamId = stream.id;
+      this.stream = undefined;
+    } else if (stream.kind === 'full') {
+      const { query, streamId } = stream.stream;
+
+      this.query = query;
+      this.streamId = streamId;
+      this.stream = stream.stream;
+    }
+  }
 }
 
 export class QueryPaneGroup {
   direction = $state<SplitDirection | undefined>(undefined);
-  panes = $state<PaneInfo[]>([usePane(undefined)]);
+  panes = $state<QueryPane[]>([new QueryPane('')]);
   overlayVisible = $state(false);
 
   constructor() {
@@ -34,7 +56,7 @@ export class QueryPaneGroup {
     this.direction = direction;
 
     if (this.panes.length == 1) {
-      this.panes.push(usePane(undefined))
+      this.panes.push(new QueryPane(''))
     }
   }
 
@@ -49,21 +71,11 @@ export class QueryPaneGroup {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
 
-    const stream = queriesStore.get(streamId);
-    if (!stream)
-      throw new Error(`Could not find stream for id ${streamId}`);
+    const entry = queriesStore.get(streamId);
+    if (!entry)
+      throw new Error(`Could not find query for stream ${streamId}`);
 
-    if (stream.kind === 'partial') {
-      this.panes[paneId] = {
-        query: stream.query,
-        stream: undefined
-      }
-    } else if (stream.kind === 'full') {
-      this.panes[paneId] = {
-        query: stream.stream.query,
-        stream: stream.stream
-      }
-    }
+    this.panes[paneId].renew(entry);
   }
 
   save(paneId: number) {
@@ -75,25 +87,33 @@ export class QueryPaneGroup {
       queriesStore.save(stream);
   }
 
+  setTitle(paneId: number, title: string) {
+    if (paneId >= this.panes.length)
+      throw new Error(`invalid pane ${paneId}`);
+
+    const streamId = this.panes[paneId]?.streamId;
+    if (streamId)
+      queriesStore.setTitle(streamId, title);
+
+  }
+
   clear(paneId: number) {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
 
-    this.panes[paneId].stream = undefined;
-    this.panes[paneId].query = '';
+    this.panes[paneId].clear();
   }
 
-  async run(paneId: number): Promise<QueryStream> {
+  async run(paneId: number, title: string): Promise<QueryStream> {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
 
     const query = this.panes[paneId].query;
-    const stream = await queriesStore.run(query);
+    const stream = await queriesStore.run(query, title);
 
-    this.panes[paneId] = {
-      query,
-      stream
-    }
+    this.panes[paneId].streamId = stream.streamId;
+    this.panes[paneId].stream = stream;
+
     return stream;
   }
 

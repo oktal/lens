@@ -25,17 +25,18 @@
 </script>
 
 <div class="flex flex-col gap-2">
-	{#each queriesStore.streams as stream}
-		{@const streamInfo = queriesStore.getStreamInfo(stream)}
+	{#each queriesStore.entries as entry}
+		{@const streamInfo = queriesStore.getStreamInfo(entry.stream)}
 		<div class="flex flex-row">
 			<Label class="flex flex-col">
 				<span>{streamInfo.id}</span>
+				<span class="text-xs font-bold">{entry.title}</span>
 				<span class="text-pretty text-xs text-muted-foreground">{streamInfo.query}</span>
-				{#if stream.kind === 'full'}
+				{#if entry.stream.kind === 'full'}
 					<div class="flex gap-1">
 						<Icon icon="carbon:save" width={16} height={16} />
 						<span class="text-pretty text-xs text-muted-foreground"
-							>{stream.stream.rows.length} rows</span
+							>{entry.stream.stream.rows.length} rows</span
 						>
 					</div>
 				{/if}

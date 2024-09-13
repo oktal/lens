@@ -11,6 +11,7 @@
 	import ExportDialog from '$lib/components/dialog/ExportDialog.svelte';
 	import QueryResultsTable from './QueryResultsTable.svelte';
 	import { queryPaneGroup, type SplitDirection } from './QueryPaneGroup.svelte';
+	import { DEFAULT_QUERY_TITLE } from './QueryPane.svelte';
 
 	import Icon from '@iconify/svelte';
 	import { mount } from 'svelte';
@@ -28,6 +29,33 @@
 
 	let { direction, paneId, closable = false }: Props = $props();
 
+	class QueryTitle {
+		mode = $state<'show' | 'edit'>('show');
+		value = $state(queryPaneGroup.panes[paneId].title);
+
+		toggleEdit() {
+			if (this.mode === 'show') this.mode = 'edit';
+			else {
+				queryPaneGroup.setTitle(paneId, this.value);
+				this.mode = 'show';
+			}
+		}
+
+		handleKeyDown(ev: KeyboardEvent) {
+			if (ev.code === 'Enter') this.toggleEdit();
+		}
+
+		focus(input: HTMLInputElement) {
+			input.focus();
+		}
+
+		reset() {
+			this.mode = 'show';
+			this.value = DEFAULT_QUERY_TITLE;
+		}
+	}
+
+	const queryTitle = new QueryTitle();
 	let queryError: any | undefined = $state(undefined);
 
 	let editorLanguage = $state('mysql');
@@ -58,7 +86,7 @@
 		} else {
 			try {
 				queryError = undefined;
-				await queryPaneGroup.run(paneId);
+				await queryPaneGroup.run(paneId, queryTitle.value);
 			} catch (e) {
 				handleError(e);
 			}
@@ -83,6 +111,11 @@
 		} catch (e) {
 			toast.error(`Failed to export data: ${e}`);
 		}
+	}
+
+	function clear() {
+		queryTitle.reset();
+		queryPaneGroup.clear(paneId);
 	}
 </script>
 
@@ -181,7 +214,7 @@
 				icon: 'carbon:erase',
 				tooltip: 'Clear',
 				disabled: queryStream === undefined,
-				action: () => queryPaneGroup.clear(paneId)
+				action: clear
 			})}
 
 			{@render topBarItem({
@@ -189,6 +222,26 @@
 				tooltip: 'Save results to history',
 				disabled: queryStream === undefined,
 				action: () => queryPaneGroup.save(paneId)
+			})}
+		</div>
+
+		<Separator orientation="vertical" />
+		<div class="ml-2 flex items-center gap-1">
+			{#if queryTitle.mode === 'show'}
+				<Label class="ml-2">{queryTitle.value}</Label>
+			{:else if queryTitle.mode === 'edit'}
+				<input
+					bind:value={queryTitle.value}
+					class="border-input bg-background text-sm ring-offset-background"
+					onkeydown={(e) => queryTitle.handleKeyDown(e)}
+					use:queryTitle.focus
+				/>
+			{/if}
+			{@render topBarItem({
+				icon: queryTitle.mode === 'show' ? 'carbon:pen' : 'carbon:checkmark',
+				tooltip: 'Rename query',
+				disabled: false,
+				action: () => queryTitle.toggleEdit()
 			})}
 		</div>
 
