@@ -46,6 +46,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@js-temporal/polyfill": "^0.4.4",
     "@tauri-apps/api": "^1.6.0",
     "bits-ui": "^0.21.13",
     "clsx": "^2.1.1",

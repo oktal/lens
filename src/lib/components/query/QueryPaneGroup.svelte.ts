@@ -5,10 +5,13 @@ import type { QueryStream } from "$lib/stores/QueryStream.svelte";
 export type SplitDirection = 'vertical' | 'horizontal';
 export const DEFAULT_QUERY_TITLE: string = 'Unnamed';
 
+import { Stopwatch } from '$lib/Stopwatch.svelte'
+
 class QueryPane {
   query = $state('');
   title = $state('');
   stream = $state<QueryStream | undefined>(undefined);
+  stopWatch = new Stopwatch();
 
   streamId?: StreamId;
 
@@ -21,8 +24,13 @@ class QueryPane {
     this.query = '';
     this.title = DEFAULT_QUERY_TITLE;
 
+    this.stopWatch.reset();
     this.streamId = undefined;
     this.stream = undefined;
+  }
+
+  close() {
+    this.stopWatch.stop();
   }
 
   renew(entry: QueryStoreEntry) {
@@ -64,6 +72,7 @@ export class QueryPaneGroup {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
 
+    this.panes[paneId].close();
     this.panes.splice(paneId, 1);
   }
 
@@ -111,10 +120,31 @@ export class QueryPaneGroup {
     const query = this.panes[paneId].query;
     const stream = await queriesStore.run(query, title);
 
+    this.panes[paneId].stopWatch.restart();
     this.panes[paneId].streamId = stream.streamId;
     this.panes[paneId].stream = stream;
 
     return stream;
+  }
+
+  pause(paneId: number) {
+    if (paneId >= this.panes.length)
+      throw new Error(`invalid pane ${paneId}`);
+
+    const pane = this.panes[paneId];
+    pane.stopWatch.pause();
+    if (pane.stream)
+      pane.stream.pause();
+  }
+
+  stop(paneId: number) {
+    if (paneId >= this.panes.length)
+      throw new Error(`invalid pane ${paneId}`);
+
+    const pane = this.panes[paneId];
+    pane.stopWatch.stop();
+    if (pane.stream)
+      pane.stream.stop();
   }
 
   showOverlay() {

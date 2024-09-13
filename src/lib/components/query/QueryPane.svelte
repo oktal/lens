@@ -7,6 +7,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip/index';
 	import { LanguageIdEnum } from 'monaco-sql-languages';
 	import { mode } from 'mode-watcher';
+	import { Temporal } from '@js-temporal/polyfill';
 
 	import ExportDialog from '$lib/components/dialog/ExportDialog.svelte';
 	import QueryResultsTable from './QueryResultsTable.svelte';
@@ -77,6 +78,9 @@
 				while (queryStream && queryStream.state === 'running' && queryStream.hasNext) {
 					await queryStream.fetchNext();
 				}
+
+				if (queryStream && queryStream.state === 'finished')
+					queryPaneGroup.panes[paneId].stopWatch.stop();
 			} catch (e) {
 				handleError(e);
 			}
@@ -85,6 +89,7 @@
 		const queryStream = queryPaneGroup.panes[paneId]?.stream;
 		if (queryStream?.state === 'paused') {
 			queryStream.resume();
+			queryPaneGroup.panes[paneId].stopWatch.resume();
 			fetch();
 		} else {
 			try {
@@ -119,6 +124,15 @@
 	function clear() {
 		queryTitle.reset();
 		queryPaneGroup.clear(paneId);
+	}
+
+	function formatDuration(duration: Temporal.Duration | undefined): string {
+		if (!duration) return '';
+		const durationString = duration.toString({ smallestUnit: 'millisecond' });
+		return durationString
+			.replace('PT', '')
+			.replaceAll(/(S|H|M|D)/g, ':')
+			.replace(/:$/, '');
 	}
 </script>
 
@@ -190,7 +204,7 @@
 				icon: 'carbon:pause',
 				tooltip: 'Pause running query',
 				disabled: queryStream?.state !== 'running',
-				action: () => queryStream!.pause()
+				action: () => queryPaneGroup.pause(paneId)
 			})}
 
 			{@render topBarItem({
@@ -200,7 +214,7 @@
 					queryStream === undefined ||
 					queryStream.state === 'stopped' ||
 					queryStream.state === 'finished',
-				action: () => queryStream!.stop()
+				action: () => queryPaneGroup.stop(paneId)
 			})}
 		</div>
 
@@ -248,7 +262,15 @@
 			})}
 		</div>
 
-		<div class="ml-auto mr-2 flex gap-1">
+		<div class="ml-auto mr-2 flex items-center gap-1">
+			{#if queryPaneGroup.panes[paneId].stopWatch.elapsed}
+				<div class="flex flex-row gap-1">
+					<Icon icon="carbon:timer" width={18} height={18} />
+					<Label>
+						{formatDuration(queryPaneGroup.panes[paneId].stopWatch.elapsed)}
+					</Label>
+				</div>
+			{/if}
 			{#if closable}
 				<Button
 					variant="secondary"
