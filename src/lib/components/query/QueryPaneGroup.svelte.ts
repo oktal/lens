@@ -96,11 +96,13 @@ export class QueryPaneGroup {
       queriesStore.save(stream);
   }
 
-  setTitle(paneId: number, title: string) {
+  setTitle(paneId: number) {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
 
-    const streamId = this.panes[paneId]?.streamId;
+    const { streamId, title } = this.panes[paneId];
+    console.log(`Setting title ${title} for ${streamId}`);
+
     if (streamId)
       queriesStore.setTitle(streamId, title);
 
@@ -113,11 +115,11 @@ export class QueryPaneGroup {
     this.panes[paneId].clear();
   }
 
-  async run(paneId: number, title: string): Promise<QueryStream> {
+  async run(paneId: number): Promise<QueryStream> {
     if (paneId >= this.panes.length)
       throw new Error(`invalid pane ${paneId}`);
 
-    const query = this.panes[paneId].query;
+    const { query, title } = this.panes[paneId];
     const stream = await queriesStore.run(query, title);
 
     this.panes[paneId].stopWatch.restart();

@@ -11,11 +11,7 @@
 
 	import ExportDialog from '$lib/components/dialog/ExportDialog.svelte';
 	import QueryResultsTable from './QueryResultsTable.svelte';
-	import {
-		DEFAULT_QUERY_TITLE,
-		queryPaneGroup,
-		type SplitDirection
-	} from './QueryPaneGroup.svelte';
+	import { queryPaneGroup, type SplitDirection } from './QueryPaneGroup.svelte';
 
 	import Icon from '@iconify/svelte';
 	import { mount } from 'svelte';
@@ -34,15 +30,19 @@
 	let { direction, paneId, closable = false }: Props = $props();
 
 	class QueryTitle {
-		mode = $state<'show' | 'edit'>('show');
-		value = $state(queryPaneGroup.panes[paneId].title);
+		private _mode = $state<'show' | 'edit'>('show');
 
 		toggleEdit() {
-			if (this.mode === 'show') this.mode = 'edit';
-			else {
-				queryPaneGroup.setTitle(paneId, this.value);
-				this.mode = 'show';
+			if (this._mode === 'show') {
+				this._mode = 'edit';
+			} else {
+				queryPaneGroup.setTitle(paneId);
+				this._mode = 'show';
 			}
+		}
+
+		get mode() {
+			return this._mode;
 		}
 
 		handleKeyDown(ev: KeyboardEvent) {
@@ -54,8 +54,7 @@
 		}
 
 		reset() {
-			this.mode = 'show';
-			this.value = DEFAULT_QUERY_TITLE;
+			this._mode = 'show';
 		}
 	}
 
@@ -94,7 +93,7 @@
 		} else {
 			try {
 				queryError = undefined;
-				await queryPaneGroup.run(paneId, queryTitle.value);
+				await queryPaneGroup.run(paneId);
 			} catch (e) {
 				handleError(e);
 			}
@@ -245,10 +244,10 @@
 		<Separator orientation="vertical" />
 		<div class="ml-2 flex items-center gap-1">
 			{#if queryTitle.mode === 'show'}
-				<Label class="ml-2">{queryTitle.value}</Label>
+				<Label class="ml-2">{queryPaneGroup.panes[paneId].title}</Label>
 			{:else if queryTitle.mode === 'edit'}
 				<input
-					bind:value={queryTitle.value}
+					bind:value={queryPaneGroup.panes[paneId].title}
 					class="border-input bg-background text-sm ring-offset-background"
 					onkeydown={(e) => queryTitle.handleKeyDown(e)}
 					use:queryTitle.focus
