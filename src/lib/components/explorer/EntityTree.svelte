@@ -152,8 +152,8 @@
 	}
 </script>
 
-<Collapsible.Root>
-	{#each databases as { name: databaseName, schemas }}
+{#each databases as { name: databaseName, schemas }}
+	<Collapsible.Root>
 		{@render trigger({
 			nodeType: 'database',
 			label: databaseName,
@@ -212,8 +212,8 @@
 				</Collapsible.Root>
 			{/each}
 		</Collapsible.Content>
-	{/each}
-</Collapsible.Root>
+	</Collapsible.Root>
+{/each}
 
 {#snippet trigger({
 	nodeType,
@@ -224,7 +224,7 @@
 	label: string;
 	context: NodeContext;
 })}
-	{@const id = `${context.kind}-${label}`}
+	{@const id = `${nodeType}-${label}`}
 	{@const icon = nodes[context.kind].icon}
 	<Collapsible.Trigger asChild let:builder>
 		<ContextMenu.Root>
