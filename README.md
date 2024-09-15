@@ -72,10 +72,12 @@ npm run tauri dev
  - [ ] Monaco-based SQL editor
    - [x] Syntax highlighting
    - [ ] Auto completion
+- [ ] Integration with other database systems: MySQL, PostgreSQL, SQLite, DuckDB
 - [ ] Charts 
 - [ ] Configuration options
   - [ ] Expose DataFusion session configuration parameters in the UI
   - [ ] Profile-based configuration
+- [ ] Querybook as way to share queries between developers and users, like Jupyter Notebook
      
 ## Sponsor
 
