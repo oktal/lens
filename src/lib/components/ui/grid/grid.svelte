@@ -1,10 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { type Dimension } from './types';
+	import type { HTMLAttributes } from 'svelte/elements';
 
 	type Template = number | Dimension[];
 
-	interface Props {
+	interface Props extends HTMLAttributes<HTMLDivElement> {
 		cols?: Template;
 		rows?: Template;
 		children: Snippet;
