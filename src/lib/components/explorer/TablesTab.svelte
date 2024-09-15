@@ -233,7 +233,7 @@
 </script>
 
 <div class="flex flex-col gap-1">
-	<div class="flex justify-center">
+	<div class="flex">
 		{@render addMenu(addMenuItems)}
 	</div>
 
@@ -253,9 +253,10 @@
 		<DropdownMenu.Trigger>
 			<Tooltip.Root>
 				<Tooltip.Trigger asChild let:builder>
-					<Button builders={[builder]} variant="ghost" size="icon">
-						<Icon icon="carbon:document-add" width={22} height={22} /></Button
-					>
+					<Button builders={[builder]} variant="secondary" size="sm" class="flex gap-1">
+						<Icon icon="carbon:document-add" width={22} height={22} />
+						Create
+					</Button>
 				</Tooltip.Trigger>
 				<Tooltip.Content side="bottom">
 					<p>Create</p>

@@ -258,7 +258,7 @@
 					onclick={() => onDrop && onDrop(context)}
 				>
 					<Icon icon="carbon:trash-can" />
-					Drop
+					Delete
 				</ContextMenu.Item>
 			</ContextMenu.Content>
 		</ContextMenu.Root>
