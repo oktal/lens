@@ -1,19 +1,21 @@
 <script lang="ts" context="module">
-	export type FileDropProperties =
+	export type NodeContext =
 		| {
-				level: 'database';
+				kind: 'database';
 				database: string;
 		  }
-		| { level: 'schema'; database: string; schema: string };
+		| { kind: 'schema'; database: string; schema: string }
+		| { kind: 'table'; database: string; schema: string; table: string };
 
 	export type FileDropEvent = {
 		filePath: string;
-		detail: FileDropProperties;
+		context: NodeContext;
 	};
 </script>
 
 <script lang="ts">
 	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
+	import * as ContextMenu from '$lib/components/ui/context-menu';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import Icon from '@iconify/svelte';
 
@@ -22,10 +24,19 @@
 	import type { DropEvent } from '$lib/dropevent';
 	import { mode } from 'mode-watcher';
 
+	type NodeType = 'database' | 'schema' | 'table';
+
 	let {
 		databases,
+		onCreate = undefined,
+		onDrop = undefined,
 		onFileDropped = undefined
-	}: { databases: Database[]; onFileDropped?: (ev: FileDropEvent) => void } = $props();
+	}: {
+		databases: Database[];
+		onCreate?: (ctx: NodeContext) => void;
+		onDrop?: (ctx: NodeContext) => void;
+		onFileDropped?: (ev: FileDropEvent) => void;
+	} = $props();
 
 	const logicalTypeIcons: Record<LogicalDataType, string> = {
 		string: 'carbon:string-text',
@@ -37,6 +48,34 @@
 		date: 'carbon:calendar',
 		time: 'carbon:time',
 		dictionary: 'carbon:book'
+	};
+
+	type NodeProperties = {
+		icon: string;
+		parent: NodeType | undefined;
+		child: NodeType | undefined;
+		droppable: boolean;
+	};
+
+	const nodes: Record<NodeType, NodeProperties> = {
+		database: {
+			icon: 'carbon:db2-database',
+			parent: undefined,
+			child: 'schema',
+			droppable: false
+		},
+		schema: {
+			icon: 'carbon:merge',
+			parent: 'database',
+			child: 'table',
+			droppable: true
+		},
+		table: {
+			icon: 'carbon:data-table',
+			parent: 'schema',
+			child: undefined,
+			droppable: true
+		}
 	};
 
 	let expandMap = new SvelteMap<
@@ -82,7 +121,7 @@
 		}
 	}
 
-	function handleDropEvent(ev: DropEvent, properties: FileDropProperties) {
+	function handleDropEvent(ev: DropEvent, context: NodeContext) {
 		ev.preventDefault();
 		if (!ev.dataTransfer) return;
 
@@ -95,7 +134,7 @@
 					if (onFileDropped) {
 						onFileDropped({
 							filePath: file.name,
-							detail: properties
+							context
 						});
 					}
 				}
@@ -104,7 +143,7 @@
 					if (onFileDropped) {
 						onFileDropped({
 							filePath: file,
-							detail: properties
+							context
 						});
 					}
 				});
@@ -116,11 +155,10 @@
 <Collapsible.Root>
 	{#each databases as { name: databaseName, schemas }}
 		{@render trigger({
-			id: `database-${databaseName}`,
-			icon: 'carbon:db2-database',
+			nodeType: 'database',
 			label: databaseName,
-			dropProperties: {
-				level: 'database',
+			context: {
+				kind: 'database',
 				database: databaseName
 			}
 		})}
@@ -129,11 +167,10 @@
 			{#each schemas as { name: schemaName, tables }}
 				<Collapsible.Root class="w-full pl-5">
 					{@render trigger({
-						id: `schema-${name}`,
-						icon: 'material-symbols-light:schema-outline',
+						nodeType: 'schema',
 						label: schemaName,
-						dropProperties: {
-							level: 'schema',
+						context: {
+							kind: 'schema',
 							database: databaseName,
 							schema: schemaName
 						}
@@ -142,13 +179,13 @@
 						{#each tables as { name, schema: { fields } }}
 							<Collapsible.Root class="w-full pl-5">
 								{@render trigger({
-									id: `table-${name}`,
-									icon: 'carbon:data-table',
+									nodeType: 'table',
 									label: name,
-									dropProperties: {
-										level: 'schema',
+									context: {
+										kind: 'table',
 										database: databaseName,
-										schema: schemaName
+										schema: schemaName,
+										table: name
 									}
 								})}
 
@@ -179,31 +216,52 @@
 </Collapsible.Root>
 
 {#snippet trigger({
-	id,
-	icon,
+	nodeType,
 	label,
-	dropProperties
+	context
 }: {
-	id: string;
-	icon: string;
+	nodeType: NodeType;
 	label: string;
-	dropProperties: FileDropProperties;
+	context: NodeContext;
 })}
+	{@const id = `${context.kind}-${label}`}
+	{@const icon = nodes[context.kind].icon}
 	<Collapsible.Trigger asChild let:builder>
-		<Button
-			builders={[builder]}
-			variant="ghost"
-			class="flex w-full justify-start gap-1"
-			on:click={() => toggleExpanded(id)}
-			ondrop={(e: DropEvent) => handleDropEvent(e, dropProperties)}
-			ondragenter={handleDragEnter}
-			ondragleave={handleDragLeave}
-		>
-			{@const state = expandMap.get(id)?.expanded ? 'expanded' : 'collapsed'}
-			{@render carret({ state })}
-			<Icon {icon} width={20} height={20} />
-			{label}
-		</Button>
+		<ContextMenu.Root>
+			<ContextMenu.Trigger>
+				<Button
+					builders={[builder]}
+					variant="ghost"
+					class="flex w-full justify-start gap-1"
+					on:click={() => toggleExpanded(id)}
+					ondragenter={handleDragEnter}
+					ondragleave={handleDragLeave}
+					ondrop={(ev: DropEvent) => handleDropEvent(ev, context)}
+				>
+					{@const state = expandMap.get(id)?.expanded ? 'expanded' : 'collapsed'}
+					{@render carret({ state })}
+					<Icon {icon} width={20} height={20} />
+					{label}
+				</Button>
+			</ContextMenu.Trigger>
+			<ContextMenu.Content>
+				{#if nodes[nodeType].child}
+					{@const child = nodes[nodeType].child}
+					<ContextMenu.Item class="flex gap-1" onclick={() => onCreate && onCreate(context)}>
+						<Icon icon={nodes[child].icon} />
+						New {child}
+					</ContextMenu.Item>
+				{/if}
+				<ContextMenu.Item
+					disabled={!nodes[context.kind].droppable}
+					class="flex gap-1 text-red-700"
+					onclick={() => onDrop && onDrop(context)}
+				>
+					<Icon icon="carbon:trash-can" />
+					Drop
+				</ContextMenu.Item>
+			</ContextMenu.Content>
+		</ContextMenu.Root>
 	</Collapsible.Trigger>
 {/snippet}
 

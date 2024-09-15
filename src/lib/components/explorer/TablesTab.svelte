@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Tooltip from '$lib/components/ui/tooltip/index';
 	import Button from '$lib/components/ui/button/button.svelte';
 
 	import Icon from '@iconify/svelte';
@@ -8,9 +9,9 @@
 
 	import DatabaseDialog from '$lib/components/dialog/DatabaseDialog.svelte';
 	import { Progress } from '$lib/components/ui/progress';
-	import SchemaDialog from '$lib/components/dialog/SchemaDialog.svelte';
+	import SchemaDialog, { type SchemaInfo } from '$lib/components/dialog/SchemaDialog.svelte';
 	import TableDialog, { type TableInfo } from '$lib/components/dialog/TableDialog.svelte';
-	import EntityTree, { type FileDropEvent } from './EntityTree.svelte';
+	import EntityTree, { type FileDropEvent, type NodeContext } from './EntityTree.svelte';
 
 	import { toast } from 'svelte-sonner';
 	import { mount } from 'svelte';
@@ -36,13 +37,14 @@
 		databases = await client.list.databases();
 	}
 
-	async function createSchema() {
+	async function createSchema(info?: Partial<SchemaInfo>) {
 		const databaseNames = databases.map((db: Database) => db.name);
 
 		const dialog = mount(SchemaDialog, {
 			target: document.body,
 			props: {
-				databaseNames
+				databaseNames,
+				info
 			}
 		});
 		const { database, name } = await dialog.show();
@@ -117,6 +119,44 @@
 		});
 	}
 
+	async function handleCreate(ctx: NodeContext) {
+		if (ctx.kind === 'database') {
+			await createSchema({ database: ctx.database });
+		} else if (ctx.kind === 'schema') {
+			const { database, schema } = ctx;
+			await createTable({
+				database,
+				schema
+			});
+		}
+	}
+
+	async function handleDrop(ctx: NodeContext) {
+		const formatDropStatement = (): string => {
+			if (ctx.kind === 'database') {
+				return `drop database ${ctx.database}`;
+			} else if (ctx.kind === 'schema') {
+				return `drop schema ${ctx.database}.${ctx.schema}`;
+			} else if (ctx.kind === 'table') {
+				return `drop table ${ctx.database}.${ctx.schema}.${ctx.table}`;
+			}
+
+			return '';
+		};
+
+		loadPromise = new Promise<void>(async (accept, _reject) => {
+			try {
+				const statement = formatDropStatement();
+				await client.sql.run(statement);
+			} catch (e) {
+				toast.error(`Error dropping: ${e}`);
+			}
+
+			databases = await client.list.databases();
+			accept();
+		});
+	}
+
 	async function handleFileDropped(ev: FileDropEvent) {
 		const parseFilePath = (filePath: string): { baseName: string; extension: string } => {
 			const pathSeparator = filePath.includes('\\') ? '\\' : '/';
@@ -134,12 +174,12 @@
 		};
 
 		const getTableBaseInfo = (): Partial<TableInfo> => {
-			const detail = ev.detail;
-			if (detail.level === 'database') {
-				const { database } = detail;
+			const context = ev.context;
+			if (context.kind === 'database') {
+				const { database } = context;
 				return { database };
-			} else if (detail.level === 'schema') {
-				const { database, schema } = detail;
+			} else if (context.kind === 'schema' || context.kind === 'table') {
+				const { database, schema } = context;
 				return { database, schema };
 			}
 
@@ -177,8 +217,8 @@
 		},
 		{
 			label: 'Schema',
-			icon: 'material-symbols-light:schema-outline',
-			onClick: createSchema
+			icon: 'carbon:merge',
+			onClick: () => createSchema(undefined)
 		},
 		{
 			label: 'Table',
@@ -193,23 +233,35 @@
 </script>
 
 <div class="flex flex-col gap-1">
-	<div class="place-self-end px-2 py-2">
+	<div class="flex justify-center">
 		{@render addMenu(addMenuItems)}
 	</div>
 
 	{#await loadPromise}
 		<Progress value={undefined} />
 	{/await}
-	<EntityTree {databases} onFileDropped={handleFileDropped} />
+	<EntityTree
+		{databases}
+		onCreate={handleCreate}
+		onDrop={handleDrop}
+		onFileDropped={handleFileDropped}
+	/>
 </div>
 
 {#snippet addMenu(items: MenuItem[])}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>
-			<Button variant="default" size="icon">
-				<Icon icon="carbon:add" width={24} height={24} /></Button
-			></DropdownMenu.Trigger
-		>
+			<Tooltip.Root>
+				<Tooltip.Trigger asChild let:builder>
+					<Button builders={[builder]} variant="ghost" size="icon">
+						<Icon icon="carbon:document-add" width={22} height={22} /></Button
+					>
+				</Tooltip.Trigger>
+				<Tooltip.Content side="bottom">
+					<p>Create</p>
+				</Tooltip.Content>
+			</Tooltip.Root>
+		</DropdownMenu.Trigger>
 		<DropdownMenu.Content>
 			<DropdownMenu.Group>
 				{#each items as { label, icon, onClick }}

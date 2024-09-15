@@ -1,14 +1,16 @@
+<script lang="ts" context="module">
+	export type SchemaInfo = {
+		database: string;
+		name: string;
+	};
+</script>
+
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as Select from '$lib/components/ui/select';
-
-	type SchemaInfo = {
-		database: string;
-		name: string;
-	};
 
 	export function show(): Promise<SchemaInfo> {
 		return new Promise<SchemaInfo>((accept, reject) => {
@@ -20,9 +22,10 @@
 
 	interface Props {
 		databaseNames: string[];
+		info?: Partial<SchemaInfo>;
 	}
 
-	let { databaseNames }: Props = $props();
+	let { databaseNames, info = undefined }: Props = $props();
 	const databaseItems = databaseNames.map((database) => {
 		return {
 			label: database,
@@ -31,7 +34,7 @@
 	});
 
 	let open = $state(false);
-	let database: string;
+	let database = $state(info?.database ?? '');
 	let name = $state('');
 
 	let accept_: ((info: SchemaInfo) => void) | undefined = undefined;
@@ -56,7 +59,11 @@
 		</Dialog.Header>
 		<div class="grid grid-cols-3 gap-4 py-4">
 			<Label class="shrink">Database</Label>
-			<Select.Root items={databaseItems} onSelectedChange={(v) => v && (database = v.value)}>
+			<Select.Root
+				selected={{ label: database, value: database }}
+				items={databaseItems}
+				onSelectedChange={(v) => v && (database = v.value)}
+			>
 				<Select.Trigger class="col-span-2">
 					<Select.Value />
 				</Select.Trigger>
