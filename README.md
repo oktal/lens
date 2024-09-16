@@ -1,6 +1,6 @@
 <h1 align="center">Lens</h1> <br>
 <p align="center">
-  <img alt="lens" src="./assets/lens.svg" width="64" height="64" />
+  <img alt="lens" src="./assets/logo.svg" width="128" height="128" />
 </p>
 
 
