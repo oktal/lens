@@ -9,6 +9,21 @@
 	import { queryPaneGroup } from '$lib/components/query/QueryPaneGroup.svelte';
 	import { toast } from 'svelte-sonner';
 	import { client } from '$lib/lens/api';
+	import EditableLabel, { type EditMode } from '../EditableLabel.svelte';
+
+	let queryTitleMode = $state<EditMode>('show');
+	let queryTitle: EditableLabel;
+
+	function handleQueryTitleToggle(streamId: StreamId, mode: EditMode) {
+		if (mode === 'show') {
+			const entry = queriesStore.get(streamId);
+			if (!entry) return;
+
+			queryPaneGroup.panes.forEach((pane) => {
+				if (pane.streamId === streamId) pane.title = entry.title;
+			});
+		}
+	}
 
 	async function deleteStream(streamId: StreamId) {
 		queriesStore.delete(streamId);
@@ -30,7 +45,13 @@
 		<div class="flex flex-row">
 			<Label class="flex flex-col">
 				<span>{streamInfo.id}</span>
-				<span class="text-xs font-bold">{entry.title}</span>
+				<EditableLabel
+					labelClass="text-xs font-bold"
+					bind:this={queryTitle}
+					bind:mode={queryTitleMode}
+					bind:value={entry.title}
+					onToggle={(mode: EditMode) => handleQueryTitleToggle(streamInfo.id, mode)}
+				/>
 				<span class="text-pretty text-xs text-muted-foreground">{streamInfo.query}</span>
 				{#if entry.stream.kind === 'full'}
 					<div class="flex gap-1">
@@ -42,7 +63,12 @@
 				{/if}
 			</Label>
 
-			<div class="ml-auto flex flex-nowrap items-center">
+			<div class="ml-auto flex flex-nowrap items-center px-1">
+				{@render controlItem({
+					icon: queryTitleMode === 'show' ? 'carbon:pen' : 'carbon:checkmark',
+					tooltip: 'Rename',
+					action: () => queryTitle?.toggleEdit()
+				})}
 				{#if queryPaneGroup.panes.length == 1}
 					{@render controlItem({
 						icon: 'carbon:renew',
