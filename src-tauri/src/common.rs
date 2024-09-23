@@ -72,11 +72,12 @@ pub enum ObjectStoreConfig {
         region: String,
     },
 
-    #[serde(rename = "gcp", rename_all = "camelCase")]
+    #[serde(rename = "gcs", rename_all = "camelCase")]
     GoogleCloudStorage {
         service_account_path: Option<String>,
         service_acccount_key: Option<String>,
         application_credentials_path: Option<String>,
+        bucket: String,
     },
 }
 

@@ -2,13 +2,14 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
 	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import type { DatasourceConfig } from '$lib/lens/types';
-	import { Button } from '../ui/button';
 	import Icon from '@iconify/svelte';
-	import { Input } from '../ui/input';
 	import type { Component } from 'svelte';
 	import AmazonS3Options from './AmazonS3Options.svelte';
+	import GoogleCloudStorageOptions from './GoogleCloudStorageOptions.svelte';
 
 	export function show(): Promise<DatasourceConfig> {
 		return new Promise<DatasourceConfig>((accept, reject) => {
@@ -41,8 +42,8 @@
 		gcs: useDatasource({
 			label: 'Google Cloud Storage',
 			icon: 'mdi:google',
-			defaultUrl: 'gcp://',
-			options: undefined
+			defaultUrl: 'gs://',
+			options: GoogleCloudStorageOptions
 		})
 	};
 
@@ -81,12 +82,11 @@
 	function closeDialog() {
 		open = false;
 		const datasource = datasources[selected];
-		let storeConfig: any = {};
-		storeConfig[selected] = options?.getConfig();
+		const storeConfig = options?.getConfig();
 
 		const config: DatasourceConfig = {
 			url: datasource.url,
-			store: storeConfig
+			store: Object.fromEntries([[selected, storeConfig]])
 		};
 
 		if (accept_) accept_(config);

@@ -12,7 +12,7 @@ use datafusion::{
     common::{project_schema, Constraints},
     datasource::{TableProvider, TableType},
     error::{DataFusionError, Result},
-    execution::{context::SessionState, SendableRecordBatchStream, TaskContext},
+    execution::{SendableRecordBatchStream, TaskContext},
     physical_expr::EquivalenceProperties,
     physical_plan::{
         memory::MemoryStream, DisplayAs, DisplayFormatType, ExecutionMode, ExecutionPlan,

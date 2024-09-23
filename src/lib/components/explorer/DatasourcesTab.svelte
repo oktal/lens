@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import DatasourceDialog from '$lib/components/dialog/DatasourceDialog.svelte';
+	import DatasourceDialog from '$lib/components/dialog/datasource/DatasourceDialog.svelte';
 	import type { DatasourceConfig } from '$lib/lens/types';
 	import { client } from '$lib/lens/api';
 
@@ -48,7 +48,7 @@
 			return {
 				kind: 'gcs',
 				url,
-				config: []
+				config: [gcsConfig.bucket]
 			};
 		}
 
@@ -61,11 +61,10 @@
 </script>
 
 <div class="flex flex-col gap-1">
-	<div class="place-self-end px-2 py-2">
-		<Button variant="default" size="icon" on:click={createDatasource}>
-			<Icon icon="carbon:add" width={24} height={24} /></Button
-		>
-	</div>
+	<Button variant="secondary" size="sm" class="flex w-min gap-1" on:click={createDatasource}>
+		<Icon icon="carbon:document-add" width={22} height={22} />
+		Create
+	</Button>
 
 	{#each datasources as datasource}
 		{@const item = toDatasourceItem(datasource)}

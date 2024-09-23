@@ -19,6 +19,7 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as Select from '$lib/components/ui/select';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import Grid from '$lib/components/ui/grid/grid.svelte';
 	import { open as dialogOpen } from '@tauri-apps/api/dialog';
 
 	import type { Database, DatasourceConfig, FileType } from '$lib/lens/types';
@@ -27,7 +28,6 @@
 	import CsvOptions from './CsvOptions.svelte';
 	import ParquetOptions from './ParquetOptions.svelte';
 	import JsonOptions from './JsonOptions.svelte';
-	import Grid from '../ui/grid/grid.svelte';
 
 	interface Props {
 		databases: Database[];

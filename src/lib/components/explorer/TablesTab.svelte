@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Tooltip from '$lib/components/ui/tooltip/index';
 	import Button from '$lib/components/ui/button/button.svelte';
 
 	import Icon from '@iconify/svelte';
@@ -10,7 +9,7 @@
 	import DatabaseDialog from '$lib/components/dialog/DatabaseDialog.svelte';
 	import { Progress } from '$lib/components/ui/progress';
 	import SchemaDialog, { type SchemaInfo } from '$lib/components/dialog/SchemaDialog.svelte';
-	import TableDialog, { type TableInfo } from '$lib/components/dialog/TableDialog.svelte';
+	import TableDialog, { type TableInfo } from '$lib/components/dialog/table/TableDialog.svelte';
 	import EntityTree, { type FileDropEvent, type NodeContext } from './EntityTree.svelte';
 
 	import { toast } from 'svelte-sonner';
@@ -251,17 +250,10 @@
 {#snippet addMenu(items: MenuItem[])}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>
-			<Tooltip.Root>
-				<Tooltip.Trigger asChild let:builder>
-					<Button builders={[builder]} variant="secondary" size="sm" class="flex gap-1">
-						<Icon icon="carbon:document-add" width={22} height={22} />
-						Create
-					</Button>
-				</Tooltip.Trigger>
-				<Tooltip.Content side="bottom">
-					<p>Create</p>
-				</Tooltip.Content>
-			</Tooltip.Root>
+			<Button variant="secondary" size="sm" class="flex gap-1">
+				<Icon icon="carbon:document-add" width={22} height={22} />
+				Create
+			</Button>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content>
 			<DropdownMenu.Group>
