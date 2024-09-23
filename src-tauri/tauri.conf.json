@@ -66,7 +66,8 @@
         "height": 600,
         "resizable": true,
         "title": "lens",
-        "width": 800
+        "width": 800,
+        "maximized": true
       }
     ]
   }
