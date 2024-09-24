@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import type { DatasourceConfig } from '$lib/lens/types';
+	import type { DatasourceConfig, StoreType } from '$lib/lens/types';
 	import Icon from '@iconify/svelte';
 	import type { Component } from 'svelte';
 	import AmazonS3Options from './AmazonS3Options.svelte';
@@ -19,20 +19,17 @@
 		});
 	}
 
-	type DataSource = 's3' | 'gcs';
-
 	type OptionsComponent = Component<{}, { getConfig: () => any }>;
 	type DatasourceItem = {
 		label: string;
 		icon: string;
+		defaultUrl: string;
 		get url(): string;
 		set url(value: string);
 		options?: OptionsComponent;
 	};
 
-	let options = $state<OptionsComponent | undefined>(undefined);
-
-	let datasources: Record<DataSource, DatasourceItem> = {
+	let datasources: Record<StoreType, DatasourceItem> = {
 		s3: useDatasource({
 			label: 'Amazon S3',
 			icon: 'mdi:aws',
@@ -48,7 +45,8 @@
 	};
 
 	let open = $state(false);
-	let selected: DataSource = $state('s3');
+	let selected = $state<StoreType>('s3');
+	let options: OptionsComponent;
 
 	let accept_: (config: DatasourceConfig) => void;
 	let reject_: () => void;
@@ -69,6 +67,7 @@
 		return {
 			label,
 			icon,
+			defaultUrl,
 			get url() {
 				return url;
 			},
@@ -86,7 +85,10 @@
 
 		const config: DatasourceConfig = {
 			url: datasource.url,
-			store: Object.fromEntries([[selected, storeConfig]])
+			store: {
+				kind: selected,
+				config: storeConfig
+			}
 		};
 
 		if (accept_) accept_(config);
@@ -125,8 +127,7 @@
 				<Input bind:value={datasources[selected].url} />
 
 				<p class="text-sm text-muted-foreground">
-					The URI your datasource will be accessible from. You can provide a prefix or bucket (eg
-					{datasources[selected].url}my-bucket)
+					The URI your datasource will be accessible from. You can provide a prefix or bucket
 				</p>
 			</div>
 			<Label>Options</Label>

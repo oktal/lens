@@ -62,6 +62,7 @@ pub struct Row {
 
 /// Configuration for an object storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "config")]
 pub enum ObjectStoreConfig {
     #[serde(rename = "s3", rename_all = "camelCase")]
     AmazonS3 {

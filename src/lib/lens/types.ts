@@ -14,9 +14,15 @@ export type GoogleCloudStorageConfig = {
 }
 
 export type StoreConfig = {
-  s3: AmazonS3Config
+  kind: 's3',
+  config: AmazonS3Config,
 } |
-{ gcs: GoogleCloudStorageConfig }
+{
+  kind: 'gcs',
+  config: GoogleCloudStorageConfig
+}
+
+export type StoreType = StoreConfig['kind'];
 
 export type DatasourceConfig = { url: string, store: StoreConfig }
 
