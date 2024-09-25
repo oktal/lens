@@ -101,11 +101,9 @@ export class QueryPaneGroup {
       throw new Error(`invalid pane ${paneId}`);
 
     const { streamId, title } = this.panes[paneId];
-    console.log(`Setting title ${title} for ${streamId}`);
 
     if (streamId)
       queriesStore.setTitle(streamId, title);
-
   }
 
   clear(paneId: number) {

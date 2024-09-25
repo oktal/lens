@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button/index';
+	import EditableLabel, { type EditMode } from '$lib/components/EditableLabel.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -29,37 +30,10 @@
 
 	let { direction, paneId, closable = false }: Props = $props();
 
-	class QueryTitle {
-		private _mode = $state<'show' | 'edit'>('show');
-
-		toggleEdit() {
-			if (this._mode === 'show') {
-				this._mode = 'edit';
-			} else {
-				queryPaneGroup.setTitle(paneId);
-				this._mode = 'show';
-			}
-		}
-
-		get mode() {
-			return this._mode;
-		}
-
-		handleKeyDown(ev: KeyboardEvent) {
-			if (ev.code === 'Enter') this.toggleEdit();
-		}
-
-		focus(input: HTMLInputElement) {
-			input.focus();
-		}
-
-		reset() {
-			this._mode = 'show';
-		}
-	}
-
-	const queryTitle = new QueryTitle();
 	let queryError: any | undefined = $state(undefined);
+
+	let queryTitle: EditableLabel;
+	let queryTitleMode = $state<EditMode>('show');
 
 	let editorLanguage = $state('mysql');
 	let editorTheme = $derived($mode === 'light' ? 'dawn' : 'tomorrownight-bright');
@@ -121,8 +95,12 @@
 	}
 
 	function clear() {
-		queryTitle.reset();
+		queryTitleMode = 'show';
 		queryPaneGroup.clear(paneId);
+	}
+
+	function handleQueryTitleToggle(mode: EditMode) {
+		if (mode === 'show') queryPaneGroup.setTitle(paneId);
 	}
 
 	function formatDuration(duration: Temporal.Duration | undefined): string {
@@ -243,21 +221,18 @@
 
 		<Separator orientation="vertical" />
 		<div class="ml-2 flex items-center gap-1">
-			{#if queryTitle.mode === 'show'}
-				<Label class="ml-2">{queryPaneGroup.panes[paneId].title}</Label>
-			{:else if queryTitle.mode === 'edit'}
-				<input
-					bind:value={queryPaneGroup.panes[paneId].title}
-					class="border-input bg-background text-sm ring-offset-background"
-					onkeydown={(e) => queryTitle.handleKeyDown(e)}
-					use:queryTitle.focus
-				/>
-			{/if}
+			<EditableLabel
+				bind:this={queryTitle}
+				bind:mode={queryTitleMode}
+				bind:value={queryPaneGroup.panes[paneId].title}
+				onToggle={handleQueryTitleToggle}
+			/>
+
 			{@render topBarItem({
-				icon: queryTitle.mode === 'show' ? 'carbon:pen' : 'carbon:checkmark',
+				icon: queryTitleMode === 'show' ? 'carbon:pen' : 'carbon:checkmark',
 				tooltip: 'Rename query',
 				disabled: false,
-				action: () => queryTitle.toggleEdit()
+				action: () => queryTitle?.toggleEdit()
 			})}
 		</div>
 

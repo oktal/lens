@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "lens",
-    "version": "0.1.0"
+    "version": "0.2.2"
   },
   "tauri": {
     "allowlist": {
@@ -15,6 +15,9 @@
       "dialog": {
         "open": true,
         "save": true
+      },
+      "shell": {
+        "open": true
       }
     },
     "bundle": {
@@ -66,7 +69,8 @@
         "height": 600,
         "resizable": true,
         "title": "lens",
-        "width": 800
+        "width": 800,
+        "maximized": true
       }
     ]
   }

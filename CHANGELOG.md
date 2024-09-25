@@ -2,6 +2,41 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.2.2](https://github.com/oktal/lens/compare/664ebef7b2e0489c327b74f5fa427941771f3808..v0.2.2) - 2024-09-25
+#### Bug Fixes
+- properly display datasources in table creation dialog - ([979d529](https://github.com/oktal/lens/commit/979d5294826b98cef8ef4c611a67be1fa93a725b)) - [@octal](https://github.com/octal)
+#### Miscellaneous Chores
+- **(version)** version 0.2.2 - ([c631ae3](https://github.com/oktal/lens/commit/c631ae37eb34a671fa6dc475e18c53e35fec8056)) - [@octal](https://github.com/octal)
+- **(version)** v0.2.1 - ([664ebef](https://github.com/oktal/lens/commit/664ebef7b2e0489c327b74f5fa427941771f3808)) - [@octal](https://github.com/octal)
+
+- - -
+
+## [v0.2.1](https://github.com/oktal/lens/compare/26f342bc4eea9de2a382d2fa0efe93e4543b90bc..v0.2.1) - 2024-09-25
+#### Miscellaneous Chores
+- **(CHANGELOG)** remove duplicate entry from CHANGELOG - ([232990c](https://github.com/oktal/lens/commit/232990c5518f856c46116f94d4b38db7a5f8f661)) - [@octal](https://github.com/octal)
+#### Refactoring
+- **(ui)** minor update of how datasources are displayed - ([26f342b](https://github.com/oktal/lens/commit/26f342bc4eea9de2a382d2fa0efe93e4543b90bc)) - [@octal](https://github.com/octal)
+
+- - -
+
+- - -
+## [v0.2.0](https://github.com/oktal/lens/compare/0fdcff7d5a13800a33ca17a777a5b1a2482e63a4..v0.2.0) - 2024-09-23
+#### Bug Fixes
+- **(ui.sidebar)** open project GitHub when clicking github icon button - ([dd8b3ad](https://github.com/oktal/lens/commit/dd8b3ad372e966ad1d2c6d60cd1e7fb6b92d8372)) - [@octal](https://github.com/octal)
+- add google gcs datasource configuration options - ([ea782aa](https://github.com/oktal/lens/commit/ea782aa3ac74d43acabb709a76422ad5738acfd6)) - [@octal](https://github.com/octal)
+#### Features
+- **(ui)** query title can now be updated from history - ([8053c4b](https://github.com/oktal/lens/commit/8053c4bd3775b1d9e349d77dd7699615248f9519)) - [@octal](https://github.com/octal)
+#### Miscellaneous Chores
+- **(ci)** update release gh workflow tag prefix - ([fdf6b1e](https://github.com/oktal/lens/commit/fdf6b1ed6cb53f8800104e9c7620454e40036171)) - [@octal](https://github.com/octal)
+- **(version)** update version in tauri.conf.json - ([66364f0](https://github.com/oktal/lens/commit/66364f09298b5fdc00ddbb7723b33c2a13d31ea8)) - [@octal](https://github.com/octal)
+- **(version)** bump version in Cargo.toml - ([a992442](https://github.com/oktal/lens/commit/a9924427e02e65867835c26948884760e0eac3ed)) - [@octal](https://github.com/octal)
+- **(version)** v0.2.0 - ([1f7ba32](https://github.com/oktal/lens/commit/1f7ba32ee1bb9d702011c8f5253ea08f87ea473a)) - [@octal](https://github.com/octal)
+- configure tag prefix for cog - ([00f1a89](https://github.com/oktal/lens/commit/00f1a8944a0bbe216fff05014ef088854ff1a72d)) - [@octal](https://github.com/octal)
+- make window maximized by default - ([2a9e8a2](https://github.com/oktal/lens/commit/2a9e8a2ef0ee8c6da9341f16a9ded6ef031f5ad3)) - [@octal](https://github.com/octal)
+- bump CHANGELOG - ([0fdcff7](https://github.com/oktal/lens/commit/0fdcff7d5a13800a33ca17a777a5b1a2482e63a4)) - [@octal](https://github.com/octal)
+
+- - -
+
 ## [0.1.0](https://github.com/oktal/lens/compare/881a737c1ae48e89d758d3f8cc43cbe24c3ac41f..0.1.0) - 2024-09-16
 #### Bug Fixes
 - **(backend)** properly unespace characters before executing sql query - ([4e52725](https://github.com/oktal/lens/commit/4e52725e5ad08ae795c90c0ec4df3f7c54f9d316)) - [@octal](https://github.com/octal)

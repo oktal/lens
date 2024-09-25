@@ -62,6 +62,7 @@ pub struct Row {
 
 /// Configuration for an object storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "config")]
 pub enum ObjectStoreConfig {
     #[serde(rename = "s3", rename_all = "camelCase")]
     AmazonS3 {
@@ -72,11 +73,12 @@ pub enum ObjectStoreConfig {
         region: String,
     },
 
-    #[serde(rename = "gcp", rename_all = "camelCase")]
+    #[serde(rename = "gcs", rename_all = "camelCase")]
     GoogleCloudStorage {
         service_account_path: Option<String>,
         service_acccount_key: Option<String>,
         application_credentials_path: Option<String>,
+        bucket: String,
     },
 }
 

@@ -7,15 +7,22 @@ export type AmazonS3Config = {
 };
 
 export type GoogleCloudStorageConfig = {
-  serviceAccountPath: string;
-  serviceAccountKey: string;
-  applicationCredentialsPath: string;
+  serviceAccountPath?: string;
+  serviceAccountKey?: string;
+  applicationCredentialsPath?: string;
+  bucket: string;
 }
 
 export type StoreConfig = {
-  s3: AmazonS3Config
+  kind: 's3',
+  config: AmazonS3Config,
 } |
-{ gcs: GoogleCloudStorageConfig }
+{
+  kind: 'gcs',
+  config: GoogleCloudStorageConfig
+}
+
+export type StoreType = StoreConfig['kind'];
 
 export type DatasourceConfig = { url: string, store: StoreConfig }
 

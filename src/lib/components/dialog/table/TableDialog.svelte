@@ -19,15 +19,15 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as Select from '$lib/components/ui/select';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import Grid from '$lib/components/ui/grid/grid.svelte';
 	import { open as dialogOpen } from '@tauri-apps/api/dialog';
 
 	import type { Database, DatasourceConfig, FileType } from '$lib/lens/types';
 	import Icon from '@iconify/svelte';
-	import type { Component } from 'svelte';
+	import type { Component, SvelteComponent } from 'svelte';
 	import CsvOptions from './CsvOptions.svelte';
 	import ParquetOptions from './ParquetOptions.svelte';
 	import JsonOptions from './JsonOptions.svelte';
-	import Grid from '../ui/grid/grid.svelte';
 
 	interface Props {
 		databases: Database[];
@@ -56,24 +56,28 @@
 		};
 	});
 
-	const datasourceItems: Array<{ value: DatasourceItem | undefined; label: string }> = [
+	const FILE_DATASOURCE: DatasourceItem = {
+		kind: 'file',
+		url: 'file://'
+	};
+
+	const DIR_DATASOURCE: DatasourceItem = {
+		kind: 'dir',
+		url: 'file://'
+	};
+
+	const datasourceItems: Array<{ value: DatasourceItem; label: string }> = [
 		{
-			value: {
-				kind: 'file',
-				url: 'file://'
-			},
-			label: 'file://'
+			value: FILE_DATASOURCE,
+			label: FILE_DATASOURCE.url
 		},
 		{
-			value: {
-				kind: 'dir',
-				url: 'file://'
-			},
+			value: DIR_DATASOURCE,
 			label: 'dir://'
 		},
 		...datasources.map((ds) => {
 			return {
-				value: toDatasourceItem(ds),
+				value: { kind: ds.store.kind, url: ds.url },
 				label: ds.url
 			};
 		})
@@ -94,25 +98,102 @@
 		dir: 'mdi:folder'
 	};
 
-	let database = $state(info?.database ?? '');
-	let schema = $state(info?.schema ?? '');
-	let name = $state(info?.name ?? '');
-	let fileType: FileType = $state(info?.fileType ?? 'csv');
-	let partitions = $state<
-		{
-			get name(): string;
-			set name(val: string);
-			get type(): string | undefined;
-			set type(val: string);
-		}[]
-	>([]);
-	let dataSource: DatasourceItem = $state({ kind: 'file', url: 'file://' });
-	let locationPath = $state(info?.location ?? '');
-	let optionsComponent = $state<OptionsComponent | undefined>(undefined);
+	class Partition {
+		name = $state('');
+		type = $state('');
+	}
+
+	class Table {
+		private readonly fileTypeOptions: Record<FileType, OptionsComponent | undefined> = {
+			csv: CsvOptions,
+			arrow: undefined,
+			parquet: ParquetOptions,
+			avro: undefined,
+			json: JsonOptions
+		};
+
+		database = $state('');
+		schema = $state('');
+		name = $state('');
+		fileType = $state<FileType>('csv');
+
+		partitions = $state<Partition[]>([]);
+
+		dataSource = $state<DatasourceItem>({ kind: 'file', url: 'file://' });
+		locationPath = $state('');
+
+		browsable = $derived.by(() => {
+			const browsable = this.dataSource.kind == 'file' || this.dataSource.kind == 'dir';
+
+			if (browsable) {
+				const dir = this.dataSource.kind == 'dir';
+				return { dir };
+			}
+
+			return undefined;
+		});
+
+		public static fromInfo(info: Partial<TableInfo>): Table {
+			let table = new Table();
+
+			const { database, schema, name, fileType } = info;
+
+			table.database = database ?? '';
+			table.schema = schema ?? '';
+			table.name = name ?? '';
+			table.fileType = fileType ?? 'csv';
+
+			return table;
+		}
+
+		addPartition() {
+			this.partitions.push(new Partition());
+		}
+
+		deletePartition(index: number) {
+			this.partitions = [...this.partitions.slice(0, index), ...this.partitions.slice(index + 1)];
+		}
+
+		get optionsComponent(): OptionsComponent | undefined {
+			return this.fileTypeOptions[this.fileType];
+		}
+
+		getLocationPath(): string {
+			if (this.dataSource?.kind === 'dir') {
+				// DataFusion requires that table path that represent a directory structure
+				// ends with with a '/' delimiter
+				if (!this.locationPath.endsWith('/')) return this.locationPath + '/';
+			}
+
+			return this.locationPath;
+		}
+
+		async openFileBrowser() {
+			if (!this.browsable) return;
+
+			const directory = this.browsable.dir;
+
+			const selected = await dialogOpen({
+				multiple: false,
+				directory
+			});
+			if (Array.isArray(selected)) {
+				this.locationPath = selected[0];
+			} else if (selected !== null) {
+				this.locationPath = selected;
+			}
+		}
+	}
+
+	const table = info ? Table.fromInfo(info) : new Table();
+
+	let optionsComponent = $state<
+		SvelteComponent<{}, { getOptions: () => Record<string, any> }> | undefined
+	>(undefined);
 
 	let schemas = $derived(
 		databases
-			.filter((db) => db.name == database)
+			.filter((db) => db.name == table.database)
 			.flatMap((db) => db.schemas.map((schema) => schema.name))
 	);
 	let schemaItems = $derived(
@@ -126,86 +207,10 @@
 
 	let open = $state(false);
 
-	let browsable = $derived.by(() => {
-		const browsable = dataSource.kind == 'file' || dataSource.kind == 'dir';
-
-		if (browsable) {
-			const dir = dataSource.kind == 'dir';
-			return { dir };
-		}
-
-		return undefined;
-	});
-
-	let fileTypeOpts: Record<FileType, OptionsComponent | undefined> = {
-		csv: CsvOptions,
-		arrow: undefined,
-		parquet: ParquetOptions,
-		avro: undefined,
-		json: JsonOptions
-	};
-
 	const dataTypes = ['Bool', 'Double', 'Int', 'Date', 'String'];
 
 	let accept_: ((info: TableInfo) => void) | undefined = undefined;
 	let reject_: ((reason?: any) => void) | undefined = undefined;
-
-	function deletePartition(index: number) {
-		partitions = [...partitions.slice(0, index), ...partitions.slice(index + 1)];
-	}
-
-	function createPartition() {
-		let name = $state('');
-		let type = $state<string | undefined>(undefined);
-
-		const partition = {
-			get name(): string {
-				return name;
-			},
-			set name(val: string) {
-				name = val;
-			},
-
-			get type(): string | undefined {
-				return type;
-			},
-			set type(val: string) {
-				type = val;
-			}
-		};
-
-		partitions.push(partition);
-	}
-
-	async function openFileBrowser(directory: boolean) {
-		const selected = await dialogOpen({
-			multiple: false,
-			directory
-		});
-		if (Array.isArray(selected)) {
-			locationPath = selected[0];
-		} else if (selected !== null) {
-			locationPath = selected;
-		}
-	}
-
-	function toDatasourceItem({ url, store }: DatasourceConfig): DatasourceItem | undefined {
-		if ('s3' in store) {
-			return {
-				kind: 's3',
-				url
-			};
-		}
-
-		if ('gcs' in store) {
-			return {
-				kind: 'gcs',
-				url
-			};
-		}
-
-		return undefined;
-	}
 
 	function createOptions(
 		options: Record<string, number | string | boolean>
@@ -227,27 +232,13 @@
 		return opts;
 	}
 
-	function getLocationPath(): string {
-		if (dataSource?.kind === 'dir') {
-			// DataFusion requires that table path that represent a directory structure
-			// ends with with a '/' delimiter
-			if (!locationPath.endsWith('/')) return locationPath + '/';
-		}
-
-		return locationPath;
-	}
-
 	function closeDialog() {
-		const getOptions = (): Record<string, string> => {
-			if (typeof optionsComponent === 'undefined') return {};
-
-			return createOptions(optionsComponent.getOptions());
-		};
-
 		open = false;
 		if (accept_) {
-			const location = `${dataSource?.url}${getLocationPath()}`;
-			const options = getOptions();
+			const { database, schema, name, fileType, partitions, dataSource } = table;
+			const locationPath = table.getLocationPath();
+			const location = `${dataSource?.url}${locationPath}`;
+			const options = createOptions(optionsComponent?.getOptions() ?? {});
 			accept_({ database, schema, name, fileType, partitions, options, location });
 		}
 	}
@@ -270,9 +261,9 @@
 			<Grid rows={3} cols={['1fr', '2fr']} class="items-center gap-2">
 				<Label>Database</Label>
 				<Select.Root
-					selected={{ label: database, value: database }}
+					selected={{ label: table.database, value: table.database }}
 					items={databaseItems}
-					onSelectedChange={(v) => v && (database = v.value)}
+					onSelectedChange={(v) => v && (table.database = v.value)}
 				>
 					<Select.Trigger>
 						<Select.Value />
@@ -288,9 +279,9 @@
 
 				<Label>Schema</Label>
 				<Select.Root
-					selected={{ label: schema, value: schema }}
+					selected={{ label: table.schema, value: table.schema }}
 					items={schemaItems}
-					onSelectedChange={(v) => v && (schema = v.value)}
+					onSelectedChange={(v) => v && (table.schema = v.value)}
 				>
 					<Select.Trigger>
 						<Select.Value />
@@ -305,11 +296,11 @@
 				</Select.Root>
 
 				<Label for="name">Name</Label>
-				<Input id="name" bind:value={name} />
+				<Input id="name" bind:value={table.name} />
 			</Grid>
 
 			<Label>Type</Label>
-			<ToggleGroup.Root variant="outline" type="single" bind:value={fileType}>
+			<ToggleGroup.Root variant="outline" type="single" bind:value={table.fileType}>
 				{#each Object.entries(fileTypeIcons) as [fileType, icon]}
 					<ToggleGroup.Item
 						value={fileType}
@@ -322,32 +313,37 @@
 				{/each}
 			</ToggleGroup.Root>
 
-			{#if fileTypeOpts[fileType]}
+			{#if table.optionsComponent}
 				<Label class="col-span-3">Options</Label>
 
 				<Card.Root class="col-span-3">
 					<div class="m-4">
-						<svelte:component this={fileTypeOpts[fileType]} bind:this={optionsComponent} />
+						<svelte:component this={table.optionsComponent} bind:this={optionsComponent} />
 					</div>
 				</Card.Root>
 			{/if}
 
 			<div class="flex flex-row items-center justify-items-center">
 				<Label>Partitioned by</Label>
-				<Button variant="default" size="icon" class="ml-auto h-8 w-8" on:click={createPartition}>
+				<Button
+					variant="default"
+					size="icon"
+					class="ml-auto h-8 w-8"
+					on:click={() => table.addPartition()}
+				>
 					<Icon icon="carbon:add" width={24} height={24} class="w-full" /></Button
 				>
 			</div>
 
 			<Grid cols={['3fr', '2fr', '1fr']} class="justify-evenly gap-1">
-				{#each partitions as partition, i}
+				{#each table.partitions as partition, i}
 					<Input bind:value={partition.name} />
 
 					<Select.Root
 						items={dataTypes.map((dt) => {
 							return { label: dt, value: dt };
 						})}
-						onSelectedChange={(v) => v && (partitions[i].type = v.value)}
+						onSelectedChange={(v) => v && (partition.type = v.value)}
 					>
 						<Select.Trigger>
 							<Select.Value placeholder="Type" />
@@ -359,7 +355,12 @@
 						</Select.Content>
 					</Select.Root>
 
-					<Button variant="outline" size="icon" class="ml-auto" on:click={() => deletePartition(i)}>
+					<Button
+						variant="outline"
+						size="icon"
+						class="ml-auto"
+						on:click={() => table.deletePartition(i)}
+					>
 						<Icon icon="mdi:delete" />
 					</Button>
 				{/each}
@@ -369,9 +370,9 @@
 			<div class="flex flex-row gap-1">
 				<div class="w-32">
 					<Select.Root
-						selected={{ value: 'file', label: 'file://' }}
 						items={datasourceItems}
-						onSelectedChange={(s) => (dataSource = s?.value)}
+						selected={{ value: FILE_DATASOURCE, label: FILE_DATASOURCE.url }}
+						onSelectedChange={(s) => s && (table.dataSource = s.value)}
 					>
 						<Select.Trigger>
 							<Select.Value />
@@ -388,14 +389,10 @@
 						</Select.Content>
 					</Select.Root>
 				</div>
-				<Input bind:value={locationPath} class="flex-1" />
+				<Input bind:value={table.locationPath} class="flex-1" />
 
-				{#if browsable}
-					<Button
-						variant="secondary"
-						size="default"
-						on:click={() => openFileBrowser(browsable.dir)}
-					>
+				{#if table.browsable}
+					<Button variant="secondary" size="default" on:click={() => table.openFileBrowser()}>
 						<Icon icon="mdi:dots-horizontal" />
 					</Button>
 				{/if}

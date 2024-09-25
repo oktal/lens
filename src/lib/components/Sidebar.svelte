@@ -5,6 +5,11 @@
 
 	import { resetMode, setMode } from 'mode-watcher';
 	import Icon from '@iconify/svelte';
+	import { open } from '@tauri-apps/api/shell';
+
+	function openGitHubPage() {
+		open('https://github.com/oktal/lens');
+	}
 </script>
 
 <div class="flex h-screen w-12 flex-col items-center gap-1 border">
@@ -22,7 +27,7 @@
 	<div class="mt-auto items-center">
 		<Tooltip.Root>
 			<Tooltip.Trigger>
-				<Button variant="ghost" size="icon">
+				<Button variant="ghost" size="icon" on:click={openGitHubPage}>
 					<Icon icon="mdi:github" width={24} height={24} />
 				</Button>
 			</Tooltip.Trigger>

@@ -2,12 +2,12 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::Context;
 use datafusion::{
-    common::{DataFusionError, sql_datafusion_err},
+    common::{sql_datafusion_err, DataFusionError},
     logical_expr::{DdlStatement, LogicalPlan},
     prelude::*,
     sql::{parser::Statement, sqlparser::parser::ParserError, TableReference},
 };
-use object_store::{aws::AmazonS3Builder, ObjectStore};
+use object_store::{aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, ObjectStore};
 use tokio::sync::mpsc;
 use url::Url;
 
@@ -59,9 +59,10 @@ fn unescape(input: &str) -> datafusion::error::Result<String> {
                     't' => '\t',
                     '\\' => '\\',
                     _ => {
-                        return Err(sql_datafusion_err!(ParserError::TokenizerError(
-                            format!("unsupported escape char: '\\{}'", next_char)
-                        )))
+                        return Err(sql_datafusion_err!(ParserError::TokenizerError(format!(
+                            "unsupported escape char: '\\{}'",
+                            next_char
+                        ))))
                     }
                 });
             }
@@ -214,7 +215,7 @@ impl Lens {
     }
 
     fn create_object_store(config: &ObjectStoreConfig) -> LensResult<Arc<dyn ObjectStore>> {
-        Ok(Arc::new(match config {
+        Ok(match &config {
             ObjectStoreConfig::AmazonS3 {
                 access_key_id,
                 secret_access_key,
@@ -235,13 +236,30 @@ impl Lens {
                     builder = builder.with_bucket_name(bucket);
                 }
 
-                builder.build()?
+                Arc::new(builder.build()?)
             }
             ObjectStoreConfig::GoogleCloudStorage {
                 service_account_path,
                 service_acccount_key,
                 application_credentials_path,
-            } => todo!(),
-        }))
+                bucket,
+            } => {
+                let mut builder = GoogleCloudStorageBuilder::from_env().with_bucket_name(bucket);
+
+                if let Some(service_account_path) = service_account_path {
+                    builder = builder.with_service_account_path(service_account_path);
+                }
+
+                if let Some(service_acccount_key) = service_acccount_key {
+                    builder = builder.with_service_account_key(service_acccount_key);
+                }
+
+                if let Some(application_credentials_path) = application_credentials_path {
+                    builder = builder.with_application_credentials(application_credentials_path);
+                }
+
+                Arc::new(builder.build()?)
+            }
+        })
     }
 }
