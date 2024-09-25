@@ -1,6 +1,6 @@
 [package]
 name = "lens"
-version = "0.2.1"
+version = "0.2.2"
 description = "An application to run SQL queries on structured files like csv, parquet, json"
 authors = ["Mathieu Stefani"]
 license = "MIT"

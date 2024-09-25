@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.2.2](https://github.com/oktal/lens/compare/664ebef7b2e0489c327b74f5fa427941771f3808..v0.2.2) - 2024-09-25
+#### Bug Fixes
+- properly display datasources in table creation dialog - ([979d529](https://github.com/oktal/lens/commit/979d5294826b98cef8ef4c611a67be1fa93a725b)) - [@octal](https://github.com/octal)
+#### Miscellaneous Chores
+- **(version)** version 0.2.2 - ([c631ae3](https://github.com/oktal/lens/commit/c631ae37eb34a671fa6dc475e18c53e35fec8056)) - [@octal](https://github.com/octal)
+- **(version)** v0.2.1 - ([664ebef](https://github.com/oktal/lens/commit/664ebef7b2e0489c327b74f5fa427941771f3808)) - [@octal](https://github.com/octal)
+
+- - -
+
 ## [v0.2.1](https://github.com/oktal/lens/compare/26f342bc4eea9de2a382d2fa0efe93e4543b90bc..v0.2.1) - 2024-09-25
 #### Miscellaneous Chores
 - **(CHANGELOG)** remove duplicate entry from CHANGELOG - ([232990c](https://github.com/oktal/lens/commit/232990c5518f856c46116f94d4b38db7a5f8f661)) - [@octal](https://github.com/octal)
