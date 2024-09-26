@@ -2765,6 +2765,7 @@ dependencies = [
  "async-trait",
  "bb8",
  "chrono",
+ "connection-string",
  "datafusion",
  "datafusion-table-providers",
  "futures",

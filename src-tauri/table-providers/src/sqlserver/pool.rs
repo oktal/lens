@@ -25,19 +25,20 @@ use tiberius::{AuthMethod, ColumnData, Config, EncryptionLevel, IntoSql, Query, 
 use tokio::net::TcpStream;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 
+use super::connection_string::SqlServerConnectionString;
+
 #[derive(Debug)]
 pub enum Error {
     Io(std::io::Error),
     Sql(tiberius::error::Error),
 
+    ConnectionString(super::connection_string::SqlServerConnectionStringError),
+
+    InvalidPort,
+    InvalidAuth,
+
     Connection(bb8::RunError<tiberius::error::Error>),
-
     Arrow(super::arrow::Error),
-
-    InvalidParameter {
-        name: Option<&'static str>,
-        detail: String,
-    },
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -51,6 +52,12 @@ impl From<std::io::Error> for Error {
 impl From<tiberius::error::Error> for Error {
     fn from(value: tiberius::error::Error) -> Self {
         Self::Sql(value)
+    }
+}
+
+impl From<super::connection_string::SqlServerConnectionStringError> for Error {
+    fn from(value: super::connection_string::SqlServerConnectionStringError) -> Self {
+        Self::ConnectionString(value)
     }
 }
 
@@ -71,15 +78,11 @@ impl fmt::Display for Error {
         match self {
             Self::Io(err) => write!(f, "{err}"),
             Self::Sql(err) => write!(f, "{err}"),
+            Self::InvalidPort => write!(f, "invalid port"),
+            Self::InvalidAuth => write!(f, "invalid authentication mode"),
             Self::Connection(err) => write!(f, "{err}"),
+            Self::ConnectionString(err) => write!(f, "{err}"),
             Self::Arrow(err) => write!(f, "{err}"),
-            Self::InvalidParameter { name, detail } => {
-                if let Some(name) = name {
-                    write!(f, "invalid parameter {name}: {detail}")
-                } else {
-                    write!(f, "invalid parameter: {detail}")
-                }
-            }
         }
     }
 }
@@ -94,6 +97,48 @@ impl Into<DataFusionError> for Error {
 
 pub struct SqlServerConnectionManager {
     config: tiberius::Config,
+}
+
+fn get_join_pushdown(params: &HashMap<String, SecretString>) -> Result<JoinPushDown> {
+    let mut context_str = String::new();
+
+    if let Some(connection_string) = params
+        .get("connection_string")
+        .map(ExposeSecret::expose_secret)
+    {
+        let conn_string = connection_string.parse::<SqlServerConnectionString>()?;
+        context_str.push_str(&format!("host={},", conn_string.host));
+
+        if let Some(instance) = conn_string.instance {
+            context_str.push_str(&format!("instance={instance},"));
+        }
+
+        if let Some(port) = conn_string.port {
+            context_str.push_str(&format!("port={port},"));
+        }
+
+        if let Some(database) = conn_string.database {
+            context_str.push_str(&format!("database={database},"));
+        }
+    } else {
+        if let Some(host) = params.get("host").map(ExposeSecret::expose_secret) {
+            context_str.push_str(&format!("host={host},"));
+        }
+
+        if let Some(Ok(port)) = params
+            .get("port")
+            .map(ExposeSecret::expose_secret)
+            .map(|p| u16::from_str_radix(p, 10))
+        {
+            context_str.push_str(&format!("port={port}"));
+        }
+
+        if let Some(database) = params.get("database").map(ExposeSecret::expose_secret) {
+            context_str.push_str(&format!("database={database}"));
+        }
+    }
+
+    Ok(JoinPushDown::AllowedFor(context_str))
 }
 
 #[async_trait]
@@ -123,6 +168,7 @@ pub type SqlServerPooledConnection = bb8::PooledConnection<'static, SqlServerCon
 
 pub struct SqlServerConnectionPool {
     pool: Arc<bb8::Pool<SqlServerConnectionManager>>,
+    join_push_down: JoinPushDown,
 }
 
 pub struct SqlServerConnection {
@@ -131,16 +177,18 @@ pub struct SqlServerConnection {
 
 impl SqlServerConnectionPool {
     pub async fn new(params: HashMap<String, SecretString>) -> Result<Self> {
-        let config = Self::create_config(params)?;
+        let join_push_down = get_join_pushdown(&params)?;
+        let config = Self::create_config(&params)?;
         let pool = bb8::Pool::builder()
             .build(SqlServerConnectionManager { config })
             .await?;
         Ok(Self {
             pool: Arc::new(pool),
+            join_push_down,
         })
     }
 
-    fn create_config(params: HashMap<String, SecretString>) -> Result<Config> {
+    fn create_config(params: &HashMap<String, SecretString>) -> Result<Config> {
         if let Some(connection_string) = params
             .get("connection_string")
             .map(ExposeSecret::expose_secret)
@@ -154,11 +202,12 @@ impl SqlServerConnectionPool {
             }
 
             if let Some(port) = params.get("port").map(ExposeSecret::expose_secret) {
-                let port = port.parse().map_err(|_| Error::InvalidParameter {
-                    name: Some("port"),
-                    detail: "invalid port".to_string(),
-                })?;
-                config.port(port)
+                let port = port.parse().map_err(|_| Error::InvalidPort)?;
+                config.port(port);
+            }
+
+            if let Some(database) = params.get("database").map(ExposeSecret::expose_secret) {
+                config.database(database);
             }
 
             if let Some(app_name) = params
@@ -181,11 +230,7 @@ impl SqlServerConnectionPool {
                 let auth = if auth_mode.eq_ignore_ascii_case("sql_server") {
                     AuthMethod::sql_server(username, password)
                 } else {
-                    return Err(Error::InvalidParameter {
-                        name: Some("auth_mode"),
-                        detail: "Invalid authentication mode: valid modes are sql_server, windows"
-                            .to_string(),
-                    });
+                    return Err(Error::InvalidAuth);
                 };
 
                 config.authentication(auth);
@@ -223,7 +268,7 @@ impl DbConnectionPool<SqlServerPooledConnection, &'static dyn ToSql> for SqlServ
     }
 
     fn join_push_down(&self) -> JoinPushDown {
-        todo!()
+        self.join_push_down.clone()
     }
 }
 
