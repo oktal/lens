@@ -38,6 +38,7 @@ rand = "0.8.5"
 bytes = "1.7.1"
 arrow-schema = "52.2.0"
 indexmap = "2.4.0"
+table-providers = { version = "0.1.0", path = "table-providers" }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
