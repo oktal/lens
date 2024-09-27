@@ -7,14 +7,14 @@ use connection_string::AdoNetString;
 use secrecy::SecretString;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum SqlServerConnectionStringError {
+pub enum SqlServerConnectionStringError {
     Invalid,
     MissingHost,
     InvalidPort(ParseIntError),
 }
 
 impl From<connection_string::Error> for SqlServerConnectionStringError {
-    fn from(value: connection_string::Error) -> Self {
+    fn from(_value: connection_string::Error) -> Self {
         Self::Invalid
     }
 }
